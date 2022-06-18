@@ -22,19 +22,20 @@ func urlFuzzScanner(url string, directoryList []string) {
 		// get the line in the text file
 		line := scanner.Text()
 		// append the line to the url
-		url = url + line
+		test_url := url + "/" + line
 		// make the request to the url
-		resp, err := http.Get(url)
+		resp, err := http.Get(test_url)
 		if err != nil {
 			fmt.Println(err)
 		}
 		// check the response status code
 		if resp.StatusCode == 200 {
 			// if the response status code is 200, print the url
-			fmt.Println(url)
+			fmt.Println(test_url + " - 200")
+		} else {
+			// if the response status code is not 200, print the url and the response status code
+			fmt.Println(test_url + " " + resp.Status)
 		}
-		// reset the url to the original url
-		url = "http://" + url
 	}
 }
 
