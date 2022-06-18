@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func urlFuzzScanner(url string, directoryList []string) {
@@ -18,23 +20,29 @@ func urlFuzzScanner(url string, directoryList []string) {
 	// read the lines in the text file
 	scanner := bufio.NewScanner(file)
 	// loop through the lines in the text file
+	concurrency := 10
+
 	for scanner.Scan() {
-		// get the line in the text file
-		line := scanner.Text()
-		// append the line to the url
-		test_url := url + "/" + line
-		// make the request to the url
-		resp, err := http.Get(test_url)
-		if err != nil {
-			fmt.Println(err)
-		}
-		// check the response status code
-		if resp.StatusCode == 200 {
-			// if the response status code is 200, print the url
-			fmt.Println(test_url + " - 200")
-		} else {
-			// if the response status code is not 200, print the url and the response status code
-			fmt.Println(test_url + " " + resp.Status)
+		for i := 1; i <= concurrency; i++ {
+			go func() {
+				// get the line in the text file
+				line := scanner.Text()
+				// append the line to the url
+				test_url := url + "/" + line
+				// make the request to the url
+				resp, err := http.Get(test_url)
+				if err != nil {
+					fmt.Println(err)
+				}
+				// check the response status code
+				if resp.StatusCode == 200 {
+					// if the response status code is 200, print the url
+					fmt.Println(test_url + " - 200")
+				} else {
+					// if the response status code is not 200, print the url and the response status code
+					fmt.Println(test_url + " " + resp.Status)
+				}
+			}()
 		}
 	}
 }
@@ -44,6 +52,12 @@ func main() {
 	url := os.Args[1]
 	// get directoryList parameter from name "directoryList" in the command line
 	directoryList := strings.Split(os.Args[2], ",")
+	start := time.Now()
+
 	// check the directory list, if the found in the url
 	urlFuzzScanner(url, directoryList)
+	
+	time.Sleep(2 * time.Second)
+	elapsed := time.Since(start)
+	log.Println(elapsed)
 }
