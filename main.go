@@ -41,13 +41,16 @@ func testUrl(url string, line string, showStatus string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	
 	// set the user agent
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36")
+	
 	// make the request
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 	}
+	
 	// check the response status code
 	if resp.StatusCode == 200 {
 		// if the response status code is 200, print the url
