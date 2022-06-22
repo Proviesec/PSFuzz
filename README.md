@@ -15,3 +15,8 @@ If you have any GitHub Dorks, just create a PullRequest.
 
 
 Discover with ProSecFuzz hidden files and directories on a web server.
+
+
+# Todos
+
+- [x] Multi requests
