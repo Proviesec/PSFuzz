@@ -20,3 +20,4 @@ Discover with ProSecFuzz hidden files and directories on a web server.
 # Todos
 
 - [x] Multi requests
+- [ ] txt save 
