@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const MAX_CONCURRENT_JOBS = 30
+const MAX_CONCURRENT_JOBS = 20
 
 func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 	// open the text file directoryList and read the lines in it
