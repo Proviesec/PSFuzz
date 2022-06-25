@@ -27,4 +27,6 @@ Wordlists
 
 - [x] Multi requests
 - [ ] Output TXT
+- [ ] Pausing progress
+- [ ] Progress bar
 - [ ] List of URLs
