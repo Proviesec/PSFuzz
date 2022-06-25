@@ -21,3 +21,4 @@ Discover with ProSecFuzz hidden files and directories on a web server.
 
 - [x] Multi requests
 - [ ] Output TXT
+- [ ] List of URLs
