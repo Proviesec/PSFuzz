@@ -15,6 +15,12 @@ If you have any GitHub Dorks, just create a PullRequest.
 
 Discover with ProSecFuzz hidden files and directories on a web server.
 # Installation & Usage
+
+Wordlists
+---------------
+**Summary:**
+  - the Wordlist is a text file, each line is a path.
+
 # Tutorial
 
 # Todos
