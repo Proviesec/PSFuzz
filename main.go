@@ -10,9 +10,16 @@ import (
 	"time"
 )
 
-const MAX_CONCURRENT_JOBS = 20
+const MAX_CONCURRENT_JOBS = 30
 
-func urlFuzzScanner(url string, directoryList []string, showStatus string) {
+type result struct {
+	sumValue      int
+	multiplyValue int
+}
+
+var statuscount = map[string]int{}
+
+func urlFuzzScanner(url string, directoryList []string, showStatus string, resultChan chan result) {
 	// open the text file directoryList and read the lines in it
 	file, err := os.Open(directoryList[0])
 	if err != nil {
@@ -33,15 +40,15 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 
 		waitChan <- struct{}{}
 		count++
-		go func(count int, url string, line string, showStatus string) {
-			testUrl(url, line, showStatus)
+		go func(count int, url string, line string, showStatus string, resultChan chan result) {
+			testUrl(url, line, showStatus, resultChan)
 			job(count)
 			<-waitChan
-		}(count, url, line, showStatus)
+		}(count, url, line, showStatus, resultChan)
 	}
 }
 
-func testUrl(url string, line string, showStatus string) {
+func testUrl(url string, line string, showStatus string, resultChan chan result) {
 	// create a new http client
 	// client := &http.Client{}
 	client := &http.Client{
@@ -62,6 +69,7 @@ func testUrl(url string, line string, showStatus string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	statuscount[resp.Status] = statuscount[resp.Status] + 1
 	// check the response status code
 	if resp.StatusCode == 200 {
 		// if the response status code is 200, print the url
@@ -70,18 +78,28 @@ func testUrl(url string, line string, showStatus string) {
 		// if the response status code is not 200, print the url and the response status code
 		fmt.Println(url + " " + resp.Status)
 	}
+	res := result{sumValue: 1, multiplyValue: resp.StatusCode}
+	resultChan <- res
+	// return the status code of the response
 }
 
 func main() {
 	// get url parameter from name "url" in the command line
 	url := os.Args[1]
+	resultChan := make(chan result, 1)
 	// get directoryList parameter from name "directoryList" in the command line
 	directoryList := strings.Split(os.Args[2], ",")
 	// get status parameter from the command lline
 	status := os.Args[3]
 
 	// check the directory list, if the found in the url
-	urlFuzzScanner(url, directoryList, status)
+	urlFuzzScanner(url, directoryList, status, resultChan)
+
+	res := <-resultChan
+	fmt.Printf("Sum Value: %d\n", res.sumValue)
+	fmt.Printf("Multiply Value: %d\n", res.multiplyValue)
+	fmt.Println(statuscount) // map[string]int
+	close(resultChan)
 }
 
 func job(index int) {
