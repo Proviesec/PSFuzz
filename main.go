@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -20,6 +19,8 @@ type result struct {
 	sumValue      int
 	multiplyValue int
 }
+
+var mutex = &sync.Mutex{}
 
 var statuscount = map[string]int{}
 
@@ -57,7 +58,6 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 	defer file.Close()
 	// read the lines in the text file
 	scanner := bufio.NewScanner(file)
-	//waitChan := make(chan struct{}, MAX_CONCURRENT_JOBS)
 	wg := sync.WaitGroup{}
 
 	count := 0
@@ -67,9 +67,6 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 		if line == "" {
 			continue
 		}
-		// get the line in the text file
-
-		//waitChan <- struct{}{}
 		wg.Add(1)
 		count++
 		go func(count int, url string, line string, showStatus string) {
@@ -82,9 +79,8 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 	return
 }
 
-func testUrl(url string, line string, showStatus string) bool {
+func testUrl(url string, line string, showStatus string) {
 	// create a new http client
-	// client := &http.Client{}
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -96,7 +92,6 @@ func testUrl(url string, line string, showStatus string) bool {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(url)
 	// set the user agent
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36")
 	// define the request with a timeout of 5 seconds
@@ -108,7 +103,9 @@ func testUrl(url string, line string, showStatus string) bool {
 	if err != nil {
 		fmt.Println(err)
 	}
+	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
+	mutex.Unlock()
 	// check the response status code
 	if resp.StatusCode == 200 {
 		// if the response status code is 200, print the url
@@ -117,18 +114,11 @@ func testUrl(url string, line string, showStatus string) bool {
 		// if the response status code is not 200, print the url and the response status code
 		fmt.Println(url + " " + resp.Status)
 	}
-	//res := result{sumValue: 1, multiplyValue: resp.StatusCode}
-	//CallClear()
-	//fmt.Println(statuscount)
-	//resultChan <- res
-	return true
-	// return the status code of the response
 }
 
 func main() {
 	// get url parameter from name "url" in the command line
 	url := os.Args[1]
-	//resultChan := make(chan result, 1)
 	// get directoryList parameter from name "directoryList" in the command line
 	directoryList := strings.Split(os.Args[2], ",")
 	// get status parameter from the command lline
@@ -137,15 +127,11 @@ func main() {
 	// check the directory list, if the found in the url
 	urlFuzzScanner(url, directoryList, status)
 
-	//	res := <-resultChan
-	//fmt.Printf("Sum Value: %d\n", res.sumValue)
-	//fmt.Printf("Multiply Value: %d\n", res.multiplyValue)
 	fmt.Println(statuscount) // map[string]int
-	//	close(resultChan)
 }
 
 func job(index int) {
-	//fmt.Println(index, "begin doing something")
-	time.Sleep(time.Duration(rand.Intn(1) * int(time.Second)))
-	//	fmt.Println(index, "done")
+	// fmt.Println(index, "begin doing something")
+	// time.Sleep(time.Duration(rand.Intn(1) * int(time.Second)))
+	// fmt.Println(index, "done")
 }
