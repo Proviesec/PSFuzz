@@ -91,6 +91,7 @@ func testUrl(url string, line string, showStatus string) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	// set the user agent
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36")
@@ -99,10 +100,10 @@ func testUrl(url string, line string, showStatus string) {
 	defer cancel()
 	// make the request
 	resp, err := client.Do(req.WithContext(ctx))
-
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
 	mutex.Unlock()
