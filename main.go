@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const MAX_CONCURRENT_JOBS = 15
+const MAX_CONCURRENT_JOBS = 10
 
 type result struct {
 	sumValue      int
@@ -58,24 +58,24 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 	defer file.Close()
 	// read the lines in the text file
 	scanner := bufio.NewScanner(file)
-	wg := sync.WaitGroup{}
 
+	concurrent := make(chan int, MAX_CONCURRENT_JOBS)
 	count := 0
 	for scanner.Scan() {
+
 		line := scanner.Text()
 		// check if the line is empty
 		if line == "" {
 			continue
 		}
-		wg.Add(1)
+		concurrent <- 1
 		count++
 		go func(count int, url string, line string, showStatus string) {
 			testUrl(url, line, showStatus)
 			job(count)
-			defer wg.Done()
+			<-concurrent
 		}(count, url, line, showStatus)
 	}
-	wg.Wait()
 	return
 }
 
@@ -133,6 +133,6 @@ func main() {
 
 func job(index int) {
 	// fmt.Println(index, "begin doing something")
-	// time.Sleep(time.Duration(rand.Intn(1) * int(time.Second)))
+	//time.Sleep(time.Duration(rand.Intn(1) * int(time.Second)))
 	// fmt.Println(index, "done")
 }
