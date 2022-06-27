@@ -1,6 +1,7 @@
-/htaccess
-/admin
+htaccess
+admin
 .git
-/error
-/config.xml
+error
+config.xml
 config.txt
+readme.html
