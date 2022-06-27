@@ -24,7 +24,10 @@ Wordlists
 Options
 ---------------
 
-# Tutorial
+# Example
+![image](https://user-images.githubusercontent.com/6010786/176002564-255b2140-8033-46e6-acf4-6e5d49cb2c85.png)
+![image](https://user-images.githubusercontent.com/6010786/176002638-a2c66756-ceba-4c64-a112-1997ac6391fc.png)
+
 
 # Todos
 
