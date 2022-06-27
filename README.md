@@ -20,6 +20,9 @@ Wordlists
 ---------------
 **Summary:**
   - the Wordlist is a text file, each line is a path.
+  
+Options
+---------------
 
 # Tutorial
 
