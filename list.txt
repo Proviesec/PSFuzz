@@ -1,0 +1,6 @@
+/htaccess
+/admin
+.git
+/error
+/config.xml
+config.txt
