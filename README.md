@@ -1,4 +1,4 @@
-# pro-sec-fuzz - Proviesec Fuzz Scanner
+# pro-sec-fuzz - Proviesec Fuzz Scanner - Web path discovery
 [![License](https://img.shields.io/badge/license-MIT-_red.svg)](https://opensource.org/licenses/MIT)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwisiswant0/go-dork/issues)
 
@@ -11,7 +11,7 @@
 
 :star: Star us on GitHub — it motivates a lot! :star:
 
-If you have any GitHub Dorks, just create a PullRequest. 
+Web path discovery
 
 Discover with ProSecFuzz hidden files and directories on a web server.
 # Installation & Usage
