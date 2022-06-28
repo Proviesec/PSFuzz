@@ -2,13 +2,14 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"os"
-	"os/exec"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -25,28 +26,22 @@ var mutex = &sync.Mutex{}
 
 var statuscount = map[string]int{}
 
-var clear map[string]func() //create a map for storing clear funcs
+func lineCounter(r io.Reader) int {
+	buf := make([]byte, 32*1024)
+	count := 0
+	lineSep := []byte{'\n'}
 
-func init() {
-	clear = make(map[string]func()) //Initialize it
-	clear["linux"] = func() {
-		cmd := exec.Command("clear") //Linux example, its tested
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
-	clear["windows"] = func() {
-		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
-}
+	for {
+		c, err := r.Read(buf)
+		count += bytes.Count(buf[:c], lineSep)
 
-func CallClear() {
-	value, ok := clear[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
-	if ok {                          //if we defined a clear func for that platform:
-		value() //we execute it
-	} else { //unsupported platform
-		panic("Your platform is unsupported! I can't clear terminal screen :(")
+		switch {
+		case err == io.EOF:
+			return count
+
+		case err != nil:
+			return count
+		}
 	}
 }
 
@@ -58,11 +53,25 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 	}
 	defer file.Close()
 	// read the lines in the text file
-	scanner := bufio.NewScanner(file)
+
+	file_lines, err := os.OpenFile(directoryList[0], os.O_RDONLY, 0444)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file_lines.Close()
+	count_lines := lineCounter(file_lines)
 
 	concurrent := make(chan int, MAX_CONCURRENT_JOBS)
+
+	scanner := bufio.NewScanner(file)
 	count := 0
 	for scanner.Scan() {
+		percent := (count * 100 / count_lines)
+		fill := strings.Repeat("x", percent) + strings.Repeat("-", 100-percent)
+		_, _ = fmt.Fprint(os.Stdout, "\r[")
+		_, _ = fmt.Fprintf(os.Stdout, "%s]", fill)
+		p := int(count * 100 / (count_lines + 1))
+		_, _ = fmt.Fprintf(os.Stdout, "\t%d %%", p)
 
 		line := scanner.Text()
 		// check if the line is empty
@@ -73,7 +82,6 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 		count++
 		go func(count int, url string, line string, showStatus string) {
 			testUrl(url, line, showStatus)
-			job(count)
 			<-concurrent
 		}(count, url, line, showStatus)
 	}
@@ -108,13 +116,14 @@ func testUrl(url string, line string, showStatus string) {
 	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
 	mutex.Unlock()
+
 	// check the response status code
 	if resp.StatusCode == 200 {
 		// if the response status code is 200, print the url
-		fmt.Println(url + " - 200")
+		fmt.Fprint(os.Stdout, "\r"+url+" - 200 "+strings.Repeat(" ", 100)+"\n")
 	} else if showStatus == "true" {
 		// if the response status code is not 200, print the url and the response status code
-		fmt.Println(url + " " + resp.Status)
+		fmt.Fprint(os.Stdout, "\r"+url+" "+resp.Status+strings.Repeat(" ", 100)+"\n")
 	}
 }
 
@@ -130,12 +139,6 @@ func main() {
 
 	// check the directory list, if the found in the url
 	urlFuzzScanner(*url, directoryList, *status)
-
+	fmt.Fprint(os.Stdout, "\n")
 	fmt.Println(statuscount) // map[string]int
-}
-
-func job(index int) {
-	// fmt.Println(index, "begin doing something")
-	//time.Sleep(time.Duration(rand.Intn(1) * int(time.Second)))
-	// fmt.Println(index, "done")
 }
