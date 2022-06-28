@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"time"
 )
 
-const MAX_CONCURRENT_JOBS = 10
+const MAX_CONCURRENT_JOBS = 2
 
 type result struct {
 	sumValue      int
@@ -119,14 +120,16 @@ func testUrl(url string, line string, showStatus string) {
 
 func main() {
 	// get url parameter from name "url" in the command line
-	url := os.Args[1]
+	url := flag.String("url", "", "URL")
 	// get directoryList parameter from name "directoryList" in the command line
-	directoryList := strings.Split(os.Args[2], ",")
+	dirlist := flag.String("dl", "", "Directory List")
 	// get status parameter from the command lline
-	status := os.Args[3]
+	status := flag.String("status", "false", "show status")
+	flag.Parse()
+	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
-	urlFuzzScanner(url, directoryList, status)
+	urlFuzzScanner(*url, directoryList, *status)
 
 	fmt.Println(statuscount) // map[string]int
 }
