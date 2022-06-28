@@ -37,3 +37,5 @@ Options
 - [ ] Pausing progress
 - [ ] Progress bar
 - [ ] List of URLs
+
+# Example
