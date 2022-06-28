@@ -36,7 +36,7 @@ Options
 - [ ] Output TXT
 - [ ] Wildcard parameter
 - [ ] Pausing progress
-- [ ] Progress bar
+- [x] Progress bar
 - [ ] List of URLs
 
 # Example
