@@ -25,13 +25,14 @@ Options
 ---------------
 
 # Example
-![image](https://user-images.githubusercontent.com/6010786/176002564-255b2140-8033-46e6-acf4-6e5d49cb2c85.png)
-![image](https://user-images.githubusercontent.com/6010786/176002638-a2c66756-ceba-4c64-a112-1997ac6391fc.png)
+![image](https://user-images.githubusercontent.com/6010786/176218589-4f5f2204-fe84-4ed5-aef6-35c04d286d53.png)
+![image](https://user-images.githubusercontent.com/6010786/176218657-490a1260-dac7-4764-a9c2-778c6b066f55.png)
 
 
 # Todos
 
 - [x] Multi requests
+- [x] Optional param output
 - [ ] Output TXT
 - [ ] Wildcard parameter
 - [ ] Pausing progress
@@ -39,5 +40,5 @@ Options
 - [ ] List of URLs
 
 # Example
-
+go run main.go -url https://www.google.com -dl list.txt -status true
 
