@@ -44,6 +44,7 @@ Options
     - [ ] Port List
     - [ ] Length
     - [ ] Response Status
+- [ ] 403 Bypass
 
 # Example
 go run main.go -url https://www.google.com -dl list.txt -status true
