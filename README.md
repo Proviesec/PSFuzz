@@ -1,4 +1,4 @@
-# pro-sec-fuzz - Proviesec Fuzz Scanner - Web path discovery
+# PSFuzz - ProvieSec Fuzz Scanner - Web path discovery
 [![License](https://img.shields.io/badge/license-MIT-_red.svg)](https://opensource.org/licenses/MIT)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwisiswant0/go-dork/issues)
 
