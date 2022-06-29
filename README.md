@@ -40,7 +40,9 @@ Options
 - [ ] Pausing progress
 - [x] Progress bar
 - [ ] List of URLs
-- [ ] Port List
+- [ ] Parameter
+    - [ ] Port List
+    - [ ] Length
 
 # Example
 go run main.go -url https://www.google.com -dl list.txt -status true
