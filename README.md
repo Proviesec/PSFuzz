@@ -43,6 +43,7 @@ Options
 - [ ] Parameter
     - [ ] Port List
     - [ ] Length
+    - [ ] Response Status
 
 # Example
 go run main.go -url https://www.google.com -dl list.txt -status true
