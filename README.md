@@ -35,6 +35,7 @@ Options
 
 - [x] Multi requests
 - [x] Optional param output
+- [ ] Redirect handler - 301... -> Can be activated via parameter
 - [ ] Output TXT
 - [x] Wildcard parameter
 - [ ] Pausing progress
