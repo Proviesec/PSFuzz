@@ -36,7 +36,7 @@ Options
 - [x] Multi requests
 - [x] Optional param output
 - [ ] Output TXT
-- [ ] Wildcard parameter
+- [x] Wildcard parameter
 - [ ] Pausing progress
 - [x] Progress bar
 - [ ] List of URLs
