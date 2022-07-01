@@ -73,30 +73,37 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 		p := int(count * 100 / (count_lines + 1))
 		_, _ = fmt.Fprintf(os.Stdout, "\t%d %%", p)
 
-		line := scanner.Text()
+		word := scanner.Text()
 		// check if the line is empty
-		if line == "" {
+		if word == "" {
 			continue
 		}
 		concurrent <- 1
 		count++
-		go func(count int, url string, line string, showStatus string) {
-			testUrl(url, line, showStatus)
+		go func(count int, url string, word string, showStatus string) {
+			testUrl(url, word, showStatus)
 			<-concurrent
-		}(count, url, line, showStatus)
+		}(count, url, word, showStatus)
 	}
 	return
 }
 
-func testUrl(url string, line string, showStatus string) {
+func testUrl(url string, word string, showStatus string) {
 	// create a new http client
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
+
+	// find the wildcard in the url
+	if strings.Contains(url, "#PSFUZZ#") {
+		url = strings.Replace(url, "#PSFUZZ#", word, 1)
+	} else {
+		url = url + word
+	}
+
 	// create a new request
-	url = url + "/" + line
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println(err)
