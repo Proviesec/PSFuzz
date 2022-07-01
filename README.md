@@ -45,6 +45,7 @@ Options
     - [ ] Length
     - [ ] Response Status
 - [ ] 403 Bypass
+- [ ] Status bypass
 
 # Example
 go run main.go -url https://www.google.com -dl list.txt -status true
