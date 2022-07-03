@@ -45,7 +45,7 @@ func lineCounter(r io.Reader) int {
 	}
 }
 
-func urlFuzzScanner(url string, directoryList []string, showStatus string) {
+func urlFuzzScanner(url string, directoryList []string, showStatus string, concurrency int) {
 	// open the text file directoryList and read the lines in it
 	file, err := os.Open(directoryList[0])
 	if err != nil {
@@ -60,8 +60,12 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string) {
 	}
 	defer file_lines.Close()
 	count_lines := lineCounter(file_lines)
+	if concurrency <= 0 {
+		concurrency = MAX_CONCURRENT_JOBS
+	}
 
-	concurrent := make(chan int, MAX_CONCURRENT_JOBS)
+	fmt.Println(concurrency)
+	concurrent := make(chan int, concurrency)
 
 	scanner := bufio.NewScanner(file)
 	count := 0
@@ -137,15 +141,26 @@ func testUrl(url string, word string, showStatus string) {
 func main() {
 	// get url parameter from name "url" in the command line
 	url := flag.String("url", "", "URL")
+	flag.StringVar(url, "u", "", "URL")
+
 	// get directoryList parameter from name "directoryList" in the command line
-	dirlist := flag.String("dl", "", "Directory List")
+	dirlist := flag.String("dirlist", "", "Directory List")
+	flag.StringVar(dirlist, "d", "", "Directory List")
+
 	// get status parameter from the command lline
 	status := flag.String("status", "false", "show status")
+	flag.StringVar(status, "s", "false", "show status")
+
+	// get concurrency parameter from the command line
+	concurrency := flag.Int("concurrency", 1, "concurrency")
+	flag.IntVar(concurrency, "c", 1, "concurrency")
+
 	flag.Parse()
+
 	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
-	urlFuzzScanner(*url, directoryList, *status)
+	urlFuzzScanner(*url, directoryList, *status, *concurrency)
 	fmt.Fprint(os.Stdout, "\n")
 	fmt.Println(statuscount) // map[string]int
 }
