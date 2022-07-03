@@ -155,6 +155,10 @@ func main() {
 	concurrency := flag.Int("concurrency", 1, "concurrency")
 	flag.IntVar(concurrency, "c", 1, "concurrency")
 
+	// get output parameter from the command line
+	output := flag.String("output", "", "output")
+	flag.StringVar(output, "o", "", "output")
+
 	flag.Parse()
 
 	directoryList := strings.Split(*dirlist, ",")
