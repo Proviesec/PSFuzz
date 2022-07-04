@@ -27,6 +27,7 @@ Options
 ---------------
 
 # Example
+![image](https://user-images.githubusercontent.com/6010786/177131582-183f6f8f-559f-43d6-b6d9-566e5cbf8a75.png)
 ![image](https://user-images.githubusercontent.com/6010786/176218589-4f5f2204-fe84-4ed5-aef6-35c04d286d53.png)
 ![image](https://user-images.githubusercontent.com/6010786/176218657-490a1260-dac7-4764-a9c2-778c6b066f55.png)
 
@@ -49,5 +50,5 @@ Options
 - [ ] Status bypass
 
 # Example
-go run main.go -url https://www.google.com -dl list.txt -status true
+go run main.go -url https://www.google.com -d list.txt -s true -c 2
 
