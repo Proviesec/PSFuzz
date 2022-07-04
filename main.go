@@ -45,7 +45,7 @@ func lineCounter(r io.Reader) int {
 	}
 }
 
-func urlFuzzScanner(url string, directoryList []string, showStatus string, concurrency int) {
+func urlFuzzScanner(url string, directoryList []string, showStatus string, concurrency int, output string) {
 	// open the text file directoryList and read the lines in it
 	file, err := os.Open(directoryList[0])
 	if err != nil {
@@ -114,7 +114,7 @@ func testUrl(url string, word string, showStatus string) {
 		return
 	}
 	// set the user agent
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 (zz99)")
 	// define the request with a timeout of 5 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -164,7 +164,7 @@ func main() {
 	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
-	urlFuzzScanner(*url, directoryList, *status, *concurrency)
+	urlFuzzScanner(*url, directoryList, *status, *concurrency, *output)
 	fmt.Fprint(os.Stdout, "\n")
 	fmt.Println(statuscount) // map[string]int
 }
