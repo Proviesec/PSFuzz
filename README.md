@@ -46,6 +46,7 @@ Options
     - [ ] Response Status
 - [ ] 403 Bypass
 - [ ] Status bypass
+- [ ] WordPress check 
 
 # Example
 go run main.go -url https://www.google.com -d list.txt -s true -c 2
