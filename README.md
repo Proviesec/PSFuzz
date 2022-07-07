@@ -22,7 +22,7 @@ Wordlists
 ---------------
 **Summary:**
   - the Wordlist is a text file, each line is a path.
-  
+  - Here you get suitable lists: https://github.com/Proviesec/directory-payload-list
 Options
 ---------------
 
