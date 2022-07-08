@@ -49,6 +49,7 @@ Options
 - [ ] WordPress check 
 - [ ] compare two scans 
     - [ ] save scan
+    - [ ] load scan
 - [ ] optional config file
     - [ ] load config 
     - [ ] save config
