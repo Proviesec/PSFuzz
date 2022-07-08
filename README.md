@@ -48,7 +48,8 @@ Options
 - [ ] Status bypass
 - [ ] WordPress check 
 - [ ] compare two scans 
-- [ ] optional config file, load, save 
+- [ ] optional config file
+    - [ ] load config 
 
 # Example
 go run main.go -url https://www.google.com -d list.txt -s true -c 2
