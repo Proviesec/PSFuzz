@@ -18,6 +18,8 @@ Web path discovery
 Discover with ProSecFuzz hidden files and directories on a web server.
 # Installation & Usage
 
+```go get https://github.com/Proviesec/PSFuzz```
+
 Wordlists
 ---------------
 **Summary:**
