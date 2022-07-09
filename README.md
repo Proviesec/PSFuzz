@@ -35,7 +35,8 @@ Options
 - [x] Multi requests
 - [x] Optional param output
 - [ ] Redirect handler - 301... -> Can be activated via parameter
-- [ ] Output TXT
+- [ ] Output
+    - [ ] TXT
 - [x] Wildcard parameter
 - [ ] Pausing progress
 - [x] Progress bar
@@ -46,6 +47,7 @@ Options
     - [ ] Response Status
 - [ ] 403 Bypass
 - [ ] Status bypass
+- [ ] Show Titel of Page
 - [ ] WordPress check 
 - [ ] compare two scans 
     - [ ] save scan
