@@ -47,7 +47,8 @@ Options
     - [ ] Response Status
 - [ ] 403 Bypass
 - [ ] Status bypass
-- [ ] Show Titel of Page
+- [ ] Show positiv false: status 200, but title 404
+- [ ] Show titel of Page
 - [ ] WordPress check 
 - [ ] compare two scans 
     - [ ] save scan
