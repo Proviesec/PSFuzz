@@ -123,6 +123,8 @@ func testUrl(url string, word string, showStatus string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	
+	// fmt.Println(resp.ContentLength)
 
 	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
