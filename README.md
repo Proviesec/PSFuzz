@@ -47,7 +47,7 @@ Options
 - [ ] Parameter
     - [ ] Port List
     - [ ] Length
-    - [ ] Response Status
+    - [ ] Response Status List 
 - [ ] 403 Bypass
 - [ ] Status bypass
 - [ ] Show positiv false: status 200, but title 404
