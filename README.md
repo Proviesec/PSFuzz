@@ -39,6 +39,7 @@ Options
 - [ ] Redirect handler - 301... -> Can be activated via parameter
 - [ ] Output
     - [ ] TXT
+    - [ ] HTML
 - [x] Wildcard parameter
 - [ ] Pausing progress
 - [x] Progress bar
