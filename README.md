@@ -51,8 +51,9 @@ Options
 - [ ] 403 Bypass
 - [ ] Status bypass
 - [ ] Show positiv false: status 200, but title 404
+- [ ] Show possible false 200, same length of startsite... 
 - [ ] Show titel of Page
-- [ ] WordPress check 
+- [ ] Fingerprint check 
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
