@@ -57,8 +57,10 @@ Options
     - [ ] Port List
     - [ ] Length
     - [ ] Response Status List 
+    - [ ] Words match list title/page
     - [ ] Set Optional Header
     - [ ] Set request Timeout
+    - [ ] Add Cookies
 - [ ] 403 Bypass
 - [ ] Status bypass
 - [ ] Show positiv false: status 200, but title 404
@@ -72,6 +74,7 @@ Options
     - [ ] load config 
     - [ ] save config
     - [ ] yaml file 
+- [ ] Proxy
       
 
 # Example
