@@ -67,6 +67,7 @@ Options
 - [ ] Show possible false 200, same length of startsite... 
 - [x] Show titel of Page
 - [ ] Fingerprint check 
+- [ ] fuzz Parameter check (normal Response vs. with paramter)
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
