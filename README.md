@@ -25,8 +25,17 @@ Wordlists
 **Summary:**
   - the Wordlist is a text file, each line is a path.
   - Here you get suitable lists: https://github.com/Proviesec/directory-payload-list
+
+
 Options
 ---------------
+**Required**
+* -u/-url
+* -d
+ 
+ **Optional**
+* -s/-status
+* -c/-concurrency
 
 # Example
 ![image](https://user-images.githubusercontent.com/6010786/177131582-183f6f8f-559f-43d6-b6d9-566e5cbf8a75.png)
