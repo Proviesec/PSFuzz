@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +26,28 @@ type result struct {
 var mutex = &sync.Mutex{}
 
 var statuscount = map[string]int{}
+
+func GetHtmlTitle(response *http.Response) string {
+	// Get the response body as a string
+	dataInBytes, _ := ioutil.ReadAll(response.Body)
+	pageContent := string(dataInBytes)
+
+	// Find a substr
+	titleStartIndex := strings.Index(pageContent, "<title>")
+	if titleStartIndex == -1 {
+		return "No title element found"
+	}
+	// <title> = length = 7
+	titleStartIndex += 7
+
+	// Find the index of the closing tag
+	titleEndIndex := strings.Index(pageContent, "</title>")
+	if titleEndIndex == -1 {
+		return "No closing tag for title found."
+	}
+	pageTitle := string([]byte(pageContent[titleStartIndex:titleEndIndex]))
+	return "Page title:" + pageTitle
+}
 
 func lineCounter(r io.Reader) int {
 	buf := make([]byte, 32*1024)
@@ -64,7 +87,6 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string, concu
 		concurrency = MAX_CONCURRENT_JOBS
 	}
 
-	fmt.Println(concurrency)
 	concurrent := make(chan int, concurrency)
 
 	scanner := bufio.NewScanner(file)
@@ -123,8 +145,7 @@ func testUrl(url string, word string, showStatus string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	
-	// fmt.Println(resp.ContentLength)
+	defer resp.Body.Close()
 
 	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
@@ -133,10 +154,10 @@ func testUrl(url string, word string, showStatus string) {
 	// check the response status code
 	if resp.StatusCode == 200 {
 		// if the response status code is 200, print the url
-		fmt.Fprint(os.Stdout, "\r"+url+" - 200 "+strings.Repeat(" ", 100)+"\n")
+		fmt.Fprint(os.Stdout, "\r"+url+" - 200 "+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
 	} else if showStatus == "true" {
 		// if the response status code is not 200, print the url and the response status code
-		fmt.Fprint(os.Stdout, "\r"+url+" "+resp.Status+strings.Repeat(" ", 100)+"\n")
+		fmt.Fprint(os.Stdout, "\r"+url+" "+resp.Status+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
 	}
 }
 
