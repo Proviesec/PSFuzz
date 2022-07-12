@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -72,14 +71,14 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string, concu
 	// open the text file directoryList and read the lines in it
 	file, err := os.Open(directoryList[0])
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
 	}
 	defer file.Close()
 	// read the lines in the text file
 
 	file_lines, err := os.OpenFile(directoryList[0], os.O_RDONLY, 0444)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
 	}
 	defer file_lines.Close()
 	count_lines := lineCounter(file_lines)
@@ -132,7 +131,7 @@ func testUrl(url string, word string, showStatus string) {
 	// create a new request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
 		return
 	}
 	// set the user agent
@@ -143,7 +142,8 @@ func testUrl(url string, word string, showStatus string) {
 	// make the request
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
+		return
 	}
 	defer resp.Body.Close()
 
