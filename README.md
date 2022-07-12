@@ -31,11 +31,12 @@ Options
 ---------------
 **Required**
 * -u/-url Example: -u https://www.google.com
-* -d
+* -d/-dirlist Example: -d list.txt
  
  **Optional**
-* -s/-status
-* -c/-concurrency
+* -s/-status Example: -s true Default:false only Status Code 200 
+* -c/-concurrency Example: -c 5
+* -o/-output
 
 # Example
 ![image](https://user-images.githubusercontent.com/6010786/177131582-183f6f8f-559f-43d6-b6d9-566e5cbf8a75.png)
