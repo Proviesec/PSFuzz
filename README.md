@@ -30,7 +30,7 @@ Wordlists
 Options
 ---------------
 **Required**
-* -u/-url
+* -u/-url Example: -u https://www.google.com
 * -d
  
  **Optional**
