@@ -32,11 +32,12 @@ Options
 **Required**
 * -u/-url Example: -u https://www.google.com
 * -d/-dirlist Example: -d list.txt
+* -o/-Output Example: -o google_output Default: output.txt
  
  **Optional**
 * -s/-status Example: -s true Default:false only Status Code 200 
 * -c/-concurrency Example: -c 5
-* -o/-Output Example: -o true 
+
 
 # Example
 ![image](https://user-images.githubusercontent.com/6010786/177131582-183f6f8f-559f-43d6-b6d9-566e5cbf8a75.png)
@@ -48,7 +49,7 @@ Options
 - [x] Optional param output
 - [ ] Redirect handler - 301... -> Can be activated via parameter
 - [ ] Output
-    - [ ] TXT
+    - [x] TXT
     - [ ] HTML
 - [x] Wildcard parameter
 - [ ] Pausing progress
