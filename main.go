@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -90,6 +91,19 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string, concu
 
 	scanner := bufio.NewScanner(file)
 	count := 0
+
+	if output == "" {
+		output = "output.txt"
+	} else {
+		output = output + ".txt"
+	}
+
+	file_create, err := os.Create(output) // Truncates if file already exists, be careful!
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+	defer file_create.Close()
+
 	for scanner.Scan() {
 		percent := (count * 100 / count_lines)
 		fill := strings.Repeat("x", percent) + strings.Repeat("-", 100-percent)
@@ -106,14 +120,15 @@ func urlFuzzScanner(url string, directoryList []string, showStatus string, concu
 		concurrent <- 1
 		count++
 		go func(count int, url string, word string, showStatus string) {
-			testUrl(url, word, showStatus)
+			// write the result to the file
+			testUrl(url, word, showStatus, file_create)
 			<-concurrent
 		}(count, url, word, showStatus)
 	}
 	return
 }
 
-func testUrl(url string, word string, showStatus string) {
+func testUrl(url string, word string, showStatus string, file_create *os.File) {
 	// create a new http client
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -151,14 +166,19 @@ func testUrl(url string, word string, showStatus string) {
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
 	mutex.Unlock()
 
+	// create output string variable
+	var outputString string
+
 	// check the response status code
 	if resp.StatusCode == 200 {
 		// if the response status code is 200, print the url
+		outputString = url + " - " + resp.Status + "\n" + GetHtmlTitle(resp) + "\n"
 		fmt.Fprint(os.Stdout, "\r"+url+" - 200 "+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
 	} else if showStatus == "true" {
-		// if the response status code is not 200, print the url and the response status code
+		outputString = url + " - " + resp.Status + "\n" + GetHtmlTitle(resp) + "\n"
 		fmt.Fprint(os.Stdout, "\r"+url+" "+resp.Status+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
 	}
+	_, err = file_create.WriteString(outputString)
 }
 
 func main() {
