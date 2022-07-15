@@ -31,11 +31,12 @@ var url = flag.String("url", "", "URL")
 var dirlist = flag.String("dirlist", "", "Directory List")
 var status = flag.String("status", "false", "show status")
 var concurrency = flag.Int("concurrency", 1, "concurrency")
-var output = flag.String("output", "", "output")
+var output string
 var filterStatusCode = flag.String("filterStatusCode", "", "Show only this status code")
 var filterStatusNot = flag.String("filterStatusCodeNot", "", "Show not this status code")
 
 func init() {
+	flag.String("output", "", "output")
 	// get url parameter from name "url" in the command line
 	flag.StringVar(url, "u", "", "URL")
 
@@ -49,7 +50,7 @@ func init() {
 	flag.IntVar(concurrency, "c", 1, "concurrency")
 
 	// get output parameter from the command line
-	flag.StringVar(output, "o", "", "output")
+	flag.StringVar(&output, "o", "", "output")
 
 	// get list of show status codes from the command line
 	flag.StringVar(filterStatusCode, "fsc", "", "Show only this status code")
@@ -99,7 +100,7 @@ func lineCounter(r io.Reader) int {
 	}
 }
 
-func urlFuzzScanner(url string, directoryList []string, showStatus string, concurrency int, output string) {
+func urlFuzzScanner(url string, directoryList []string, showStatus string, concurrency int) {
 	// open the text file directoryList and read the lines in it
 	file, err := os.Open(directoryList[0])
 	if err != nil {
@@ -201,10 +202,10 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 	var outputString string
 
 	// check the response status code
-	if resp.StatusCode == 200 {
+	if resp.StatusCode == 200 || resp.StatusCode == 204 || resp.StatusCode == 405 || resp.StatusCode == 201 {
 		// if the response status code is 200, print the url
 		outputString = url + " - " + resp.Status + "\n" + GetHtmlTitle(resp) + "\n"
-		fmt.Fprint(os.Stdout, "\r"+url+" - 200 "+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
+		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
 	} else if showStatus == "true" {
 		outputString = url + " - " + resp.Status + "\n" + GetHtmlTitle(resp) + "\n"
 		fmt.Fprint(os.Stdout, "\r"+url+" "+resp.Status+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
@@ -218,7 +219,7 @@ func main() {
 	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
-	urlFuzzScanner(*url, directoryList, *status, *concurrency, *output)
+	urlFuzzScanner(*url, directoryList, *status, *concurrency)
 	fmt.Fprint(os.Stdout, "\n")
 	fmt.Println(statuscount) // map[string]int
 }
