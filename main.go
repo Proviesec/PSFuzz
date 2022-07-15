@@ -27,6 +27,37 @@ var mutex = &sync.Mutex{}
 
 var statuscount = map[string]int{}
 
+var url = flag.String("url", "", "URL")
+var dirlist = flag.String("dirlist", "", "Directory List")
+var status = flag.String("status", "false", "show status")
+var concurrency = flag.Int("concurrency", 1, "concurrency")
+var output = flag.String("output", "", "output")
+var filterStatusCode = flag.String("filterStatusCode", "", "Show only this status code")
+var filterStatusNot = flag.String("filterStatusCodeNot", "", "Show not this status code")
+
+func init() {
+	// get url parameter from name "url" in the command line
+	flag.StringVar(url, "u", "", "URL")
+
+	// get directoryList parameter from name "directoryList" in the command line
+	flag.StringVar(dirlist, "d", "", "Directory List")
+
+	// get status parameter from the command lline
+	flag.StringVar(status, "s", "false", "show status")
+
+	// get concurrency parameter from the command line
+	flag.IntVar(concurrency, "c", 1, "concurrency")
+
+	// get output parameter from the command line
+	flag.StringVar(output, "o", "", "output")
+
+	// get list of show status codes from the command line
+	flag.StringVar(filterStatusCode, "fsc", "", "Show only this status code")
+
+	// get list of status code to be filtered from the command line
+	flag.StringVar(filterStatusNot, "fscn", "", "Show not this status code")
+}
+
 func GetHtmlTitle(response *http.Response) string {
 	// Get the response body as a string
 	dataInBytes, _ := ioutil.ReadAll(response.Body)
@@ -182,26 +213,6 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 }
 
 func main() {
-	// get url parameter from name "url" in the command line
-	url := flag.String("url", "", "URL")
-	flag.StringVar(url, "u", "", "URL")
-
-	// get directoryList parameter from name "directoryList" in the command line
-	dirlist := flag.String("dirlist", "", "Directory List")
-	flag.StringVar(dirlist, "d", "", "Directory List")
-
-	// get status parameter from the command lline
-	status := flag.String("status", "false", "show status")
-	flag.StringVar(status, "s", "false", "show status")
-
-	// get concurrency parameter from the command line
-	concurrency := flag.Int("concurrency", 1, "concurrency")
-	flag.IntVar(concurrency, "c", 1, "concurrency")
-
-	// get output parameter from the command line
-	output := flag.String("output", "", "output")
-	flag.StringVar(output, "o", "", "output")
-
 	flag.Parse()
 
 	directoryList := strings.Split(*dirlist, ",")
