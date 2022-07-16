@@ -29,7 +29,7 @@ var statuscount = map[string]int{}
 
 var url = flag.String("url", "", "URL")
 var dirlist = flag.String("dirlist", "", "Directory List")
-var status = flag.String("status", "false", "show status")
+var showStatus string
 var concurrency int
 var output string
 var filterStatusCode string
@@ -44,21 +44,24 @@ func init() {
 	flag.StringVar(dirlist, "d", "", "Directory List")
 
 	// get status parameter from the command lline
-	flag.StringVar(status, "s", "false", "show status")
+	flag.StringVar(&showStatus, "showStatus", "false", "show status")
+	flag.StringVar(&showStatus, "s", "false", "show status")
 
 	// get concurrency parameter from the command line
-	flag.Int("concurrency", 1, "concurrency")
+	flag.IntVar(&concurrency, "concurrency", 1, "concurrency")
 	flag.IntVar(&concurrency, "c", 1, "concurrency")
 
 	// get output parameter from the command line
+
+	flag.StringVar(&output, "output", "", "output")
 	flag.StringVar(&output, "o", "", "output")
 
 	// get list of show status codes from the command line
-	flag.String("filterStatusCode", "", "Show only this status code")
+	flag.StringVar(&filterStatusCode, "filterStatusCode", "", "Show only this status code")
 	flag.StringVar(&filterStatusCode, "fsc", "", "Show only this status code")
 
 	// get list of status code to be filtered from the command line
-	flag.String("filterStatusCodeNot", "", "Show not this status code")
+	flag.StringVar(&filterStatusNot, "filterStatusCodeNot", "", "Show not this status code")
 	flag.StringVar(&filterStatusNot, "fscn", "", "Show not this status code")
 }
 
@@ -103,7 +106,7 @@ func lineCounter(r io.Reader) int {
 	}
 }
 
-func urlFuzzScanner(url string, directoryList []string, showStatus string) {
+func urlFuzzScanner(url string, directoryList []string) {
 	// open the text file directoryList and read the lines in it
 	file, err := os.Open(directoryList[0])
 	if err != nil {
@@ -222,7 +225,7 @@ func main() {
 	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
-	urlFuzzScanner(*url, directoryList, *status)
+	urlFuzzScanner(*url, directoryList)
 	fmt.Fprint(os.Stdout, "\n")
 	fmt.Println(statuscount) // map[string]int
 }
