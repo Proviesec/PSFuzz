@@ -47,6 +47,7 @@ Options
 
 - [x] Multi requests
 - [x] Optional param output
+- [ ] check https or http
 - [ ] Redirect handler - 301... -> Can be activated via parameter
 - [ ] Output
     - [x] TXT
