@@ -1,5 +1,5 @@
 ![PSFuzz](https://user-images.githubusercontent.com/6010786/176360134-adc6d195-60b0-4628-af06-b6b42afaffae.png)
-![](https://us-central1-progress-markdown.cloudfunctions.net/progress/50)
+![](https://us-central1-progress-markdown.cloudfunctions.net/progress/70)
 # PSFuzz - ProvieSec Fuzz Scanner - Web path discovery
 [![License](https://img.shields.io/badge/license-MIT-_red.svg)](https://opensource.org/licenses/MIT)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwisiswant0/go-dork/issues)
