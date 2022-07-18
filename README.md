@@ -69,7 +69,7 @@ Options
     - [ ] Set Optional Header
     - [ ] Set request Timeout
     - [ ] Add Cookies
-- [ ] 403 Bypass
+- [ ] 403 Bypass, config 
 - [ ] Status bypass
 - [ ] Show positiv false: status 200, but title 404
 - [ ] Show possible false 200, same length of startsite... 
