@@ -28,7 +28,7 @@ var mutex = &sync.Mutex{}
 
 var statuscount = map[string]int{}
 
-var url = flag.String("url", "", "URL")
+var url string
 var dirlist = flag.String("dirlist", "", "Directory List")
 var showStatus string
 var concurrency int
@@ -40,7 +40,8 @@ var filterStatusNotList []string
 
 func init() {
 	// get url parameter from name "url" in the command line
-	flag.StringVar(url, "u", "", "URL")
+	flag.StringVar(&url, "url", "", "URL")
+	flag.StringVar(&url, "u", "", "URL")
 
 	// get directoryList parameter from name "directoryList" in the command line
 	flag.StringVar(dirlist, "d", "", "Directory List")
@@ -70,6 +71,11 @@ func init() {
 
 	filterStatusCodeList = strings.Split(filterStatusCode, ",")
 	filterStatusNotList = strings.Split(filterStatusNot, ",")
+
+	// If the identified URL has neither http or https infront of it. Create both and scan them.
+	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
+		url = "https://" + url
+	}
 }
 
 func contains(s []string, str string) bool {
@@ -123,7 +129,7 @@ func lineCounter(r io.Reader) int {
 	}
 }
 
-func urlFuzzScanner(url string, directoryList []string) {
+func urlFuzzScanner(directoryList []string) {
 	// open the text file directoryList and read the lines in it
 	file, err := os.Open(directoryList[0])
 	if err != nil {
@@ -235,7 +241,7 @@ func main() {
 	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
-	urlFuzzScanner(*url, directoryList)
+	urlFuzzScanner(directoryList)
 	fmt.Fprint(os.Stdout, "\n")
 	fmt.Println(statuscount) // map[string]int
 }
