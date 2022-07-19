@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -33,11 +34,12 @@ var showStatus string
 var concurrency int
 var output string
 var filterStatusCode string
+var filterStatusCodeList []string
 var filterStatusNot string
+var filterStatusNotList []string
 
 func init() {
 	// get url parameter from name "url" in the command line
-	flag.String("output", "", "output")
 	flag.StringVar(url, "u", "", "URL")
 
 	// get directoryList parameter from name "directoryList" in the command line
@@ -63,6 +65,21 @@ func init() {
 	// get list of status code to be filtered from the command line
 	flag.StringVar(&filterStatusNot, "filterStatusCodeNot", "", "Show not this status code")
 	flag.StringVar(&filterStatusNot, "fscn", "", "Show not this status code")
+
+	flag.Parse()
+
+	filterStatusCodeList = strings.Split(filterStatusCode, ",")
+	filterStatusNotList = strings.Split(filterStatusNot, ",")
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
 }
 
 func GetHtmlTitle(response *http.Response) string {
@@ -198,7 +215,6 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
 		return
 	}
-	defer resp.Body.Close()
 
 	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
@@ -207,21 +223,15 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 	// create output string variable
 	var outputString string
 
-	// check the response status code
-	if resp.StatusCode == 200 || resp.StatusCode == 204 || resp.StatusCode == 405 || resp.StatusCode == 201 {
-		// if the response status code is 200, print the url
-		outputString = url + " - " + resp.Status + "\n" + GetHtmlTitle(resp) + "\n"
-		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
-	} else if showStatus == "true" {
-		outputString = url + " - " + resp.Status + "\n" + GetHtmlTitle(resp) + "\n"
-		fmt.Fprint(os.Stdout, "\r"+url+" "+resp.Status+strings.Repeat(" ", 100)+"\n"+GetHtmlTitle(resp)+"\n")
+	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
+		title := GetHtmlTitle(resp)
+		outputString = url + " - " + resp.Status + "\n" + title + "\n"
+		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+title+"\n")
 	}
 	_, err = file_create.WriteString(outputString)
 }
 
 func main() {
-	flag.Parse()
-
 	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
