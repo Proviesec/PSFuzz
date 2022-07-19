@@ -63,8 +63,8 @@ Options
 - [ ] Parameter
     - [ ] Port List
     - [ ] Length
-    - [ ] Response Status List show
-    - [ ] Response Status List not show
+    - [x] Response Status List show
+    - [x] Response Status List not show
     - [ ] Words match list title/page
     - [ ] Set Optional Header
     - [ ] Set request Timeout
