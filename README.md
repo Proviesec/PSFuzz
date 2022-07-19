@@ -57,7 +57,6 @@ Options
     - [x] TXT
     - [ ] HTML
 - [x] Wildcard parameter
-- [ ] Pausing progress
 - [x] Progress bar
 - [ ] List of URLs
 - [ ] Parameter
