@@ -231,8 +231,12 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 
 	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
 		title := GetHtmlTitle(resp)
+		if strings.Contains(title, "404") {
+			title = title + " -- possibile a 404"
+		}
 		outputString = url + " - " + resp.Status + "\n" + title + "\n"
-		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+title+"\n")
+		// convert resp.ContentLength to string
+		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+title+" "+strconv.FormatInt(resp.ContentLength, 10)+"\n")
 	}
 	_, err = file_create.WriteString(outputString)
 }
