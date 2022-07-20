@@ -88,7 +88,7 @@ func contains(s []string, str string) bool {
 	return false
 }
 
-func GetHtmlTitle(response *http.Response) string {
+func GetHtmlTitle(response *http.Response) (string, int) {
 	// Get the response body as a string
 	dataInBytes, _ := ioutil.ReadAll(response.Body)
 	pageContent := string(dataInBytes)
@@ -96,7 +96,7 @@ func GetHtmlTitle(response *http.Response) string {
 	// Find a substr
 	titleStartIndex := strings.Index(pageContent, "<title>")
 	if titleStartIndex == -1 {
-		return "No title element found"
+		return "No title element found", len(pageContent)
 	}
 	// <title> = length = 7
 	titleStartIndex += 7
@@ -104,10 +104,10 @@ func GetHtmlTitle(response *http.Response) string {
 	// Find the index of the closing tag
 	titleEndIndex := strings.Index(pageContent, "</title>")
 	if titleEndIndex == -1 {
-		return "No closing tag for title found."
+		return "No closing tag for title found.", len(pageContent)
 	}
 	pageTitle := string([]byte(pageContent[titleStartIndex:titleEndIndex]))
-	return "Page title:" + pageTitle
+	return "Page title:" + pageTitle, len(pageContent)
 }
 
 func lineCounter(r io.Reader) int {
@@ -230,13 +230,13 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 	var outputString string
 
 	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
-		title := GetHtmlTitle(resp)
+		title, length := GetHtmlTitle(resp)
 		if strings.Contains(title, "404") {
 			title = title + " -- possibile a 404"
 		}
 		outputString = url + " - " + resp.Status + "\n" + title + "\n"
 		// convert resp.ContentLength to string
-		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+title+" "+strconv.FormatInt(resp.ContentLength, 10)+"\n")
+		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+title+" "+strconv.Itoa(length)+"\n")
 	}
 	_, err = file_create.WriteString(outputString)
 }
