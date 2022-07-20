@@ -76,9 +76,10 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
     - [ ] Add Cookies
 - [ ] 403 Bypass, config 
 - [ ] Status bypass
-- [ ] Show positiv false: status 200, but title 404
+- [x] Show positiv false: status 200, but title 404
 - [ ] Show possible false 200, same length of startsite... 
 - [x] Show titel of Page
+- [x] Show Response Body Length
 - [ ] Fingerprint check 
 - [ ] fuzz Parameter check (normal Response vs. with paramter)
 - [ ] compare two scans 
