@@ -44,8 +44,11 @@ Options
 
 
 # Example
-![image](https://user-images.githubusercontent.com/6010786/177131582-183f6f8f-559f-43d6-b6d9-566e5cbf8a75.png)
+```
+go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s true -fscn 404,301,302
+```
 
+![image](https://user-images.githubusercontent.com/6010786/180019908-3f693fbd-d80e-44ad-b5f9-523f3d74dee1.png)
 
 # Todos
 
