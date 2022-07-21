@@ -31,6 +31,7 @@ var statuscount = map[string]int{}
 var url string
 var dirlist = flag.String("dirlist", "", "Directory List")
 var showStatus string
+var redirect string
 var concurrency int
 var output string
 var filterStatusCode string
@@ -49,6 +50,10 @@ func init() {
 	// get status parameter from the command lline
 	flag.StringVar(&showStatus, "showStatus", "false", "show status")
 	flag.StringVar(&showStatus, "s", "false", "show status")
+
+	// get concurrency parameter from the command line
+	flag.StringVar(&redirect, "redirect", "true", "redirect")
+	flag.StringVar(&redirect, "3", "true", "redirect")
 
 	// get concurrency parameter from the command line
 	flag.IntVar(&concurrency, "concurrency", 1, "concurrency")
@@ -178,32 +183,32 @@ func urlFuzzScanner(directoryList []string) {
 		if word == "" {
 			continue
 		}
+
 		concurrent <- 1
 		count++
-		go func(count int, url string, word string, showStatus string) {
+		go func(count int, url string, showStatus string) {
+			// find the wildcard in the url
+			if strings.Contains(url, "#PSFUZZ#") {
+				url = strings.Replace(url, "#PSFUZZ#", word, 1)
+			} else {
+				url = url + word
+			}
 			// write the result to the file
-			testUrl(url, word, showStatus, file_create)
+			testUrl(url, showStatus, file_create, false)
 			<-concurrent
-		}(count, url, word, showStatus)
+		}(count, url, showStatus)
 	}
 	return
 }
 
-func testUrl(url string, word string, showStatus string, file_create *os.File) {
+func testUrl(url string, showStatus string, file_create *os.File, redirected bool) {
+
 	// create a new http client
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
-
-	// find the wildcard in the url
-	if strings.Contains(url, "#PSFUZZ#") {
-		url = strings.Replace(url, "#PSFUZZ#", word, 1)
-	} else {
-		url = url + word
-	}
-
 	// create a new request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -228,15 +233,24 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 
 	// create output string variable
 	var outputString string
-
 	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
 		title, length := GetResponseDetails(resp)
 		if strings.Contains(title, "404") {
 			title = title + " -- possibile a 404"
 		}
-		outputString = url + " - " + resp.Status + "\n" + title + "\n"
+		if redirected {
+			outputString = "redirected to "
+		}
+		outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " " + strconv.Itoa(length) + "\n"
 		// convert resp.ContentLength to string
-		fmt.Fprint(os.Stdout, "\r"+url+" - "+resp.Status+" "+strings.Repeat(" ", 100)+"\n"+title+" "+strconv.Itoa(length)+"\n")
+		fmt.Fprint(os.Stdout, "\r"+outputString)
+		if redirected {
+			fmt.Fprint(os.Stdout, "redirected to ")
+		}
+		if resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently { //status code 302
+			redirUrl, _ := resp.Location()
+			testUrl(redirUrl.String(), showStatus, file_create, true)
+		}
 	}
 	_, err = file_create.WriteString(outputString)
 }
