@@ -58,7 +58,9 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
 - [x] Multi requests
 - [x] Optional param output
 - [x] check https or http
-- [ ] Redirect handler - 301... -> Can be activated via parameter
+- [x] Redirect handler - 301... -> Can be activated via parameter
+    - [ ] Show Redirect URL
+    - [ ] Skip Status filter if redirect true (via parameter)
 - [ ] Output
     - [x] TXT
     - [ ] HTML
