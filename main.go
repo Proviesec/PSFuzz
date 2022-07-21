@@ -38,6 +38,10 @@ var filterStatusCode string
 var filterStatusCodeList []string
 var filterStatusNot string
 var filterStatusNotList []string
+var filterLength string
+var filterLengthList []string
+var filterLengthNot string
+var filterLengthNotList []string
 
 func init() {
 	// get url parameter from name "url" in the command line
@@ -72,10 +76,21 @@ func init() {
 	flag.StringVar(&filterStatusNot, "filterStatusCodeNot", "", "Show not this status code")
 	flag.StringVar(&filterStatusNot, "fscn", "", "Show not this status code")
 
+	// get  length from the command line
+	flag.StringVar(&filterLength, "filterLength", "true", "Show only response length")
+	flag.StringVar(&filterLength, "fl", "true", "Show only response length")
+
+	// get not show length from the command line
+	flag.StringVar(&filterLengthNot, "filterLengthNot", "", "Don´t show this response length")
+	flag.StringVar(&filterLengthNot, "fln", "", "Don´t show this response length")
+
 	flag.Parse()
 
 	filterStatusCodeList = strings.Split(filterStatusCode, ",")
 	filterStatusNotList = strings.Split(filterStatusNot, ",")
+
+	filterLengthList = strings.Split(filterLength, ",")
+	filterLengthNotList = strings.Split(filterLengthNot, ",")
 
 	// If the identified URL has neither http or https infront of it. Create both and scan them.
 	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
@@ -235,21 +250,23 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	var outputString string
 	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
 		title, length := GetResponseDetails(resp)
-		if strings.Contains(title, "404") {
-			title = title + " -- possibile a 404"
-		}
-		if redirected {
-			outputString = "redirected to "
-		}
-		outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " " + strconv.Itoa(length) + "\n"
-		// convert resp.ContentLength to string
-		fmt.Fprint(os.Stdout, "\r"+outputString)
-		if redirected {
-			fmt.Fprint(os.Stdout, "redirected to ")
-		}
-		if resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently { //status code 302
-			redirUrl, _ := resp.Location()
-			testUrl(redirUrl.String(), showStatus, file_create, true)
+		if contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "true") {
+			if strings.Contains(title, "404") {
+				title = title + " -- possibile a 404"
+			}
+			if redirected {
+				outputString = "redirected to "
+			}
+			outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " " + strconv.Itoa(length) + "\n"
+			// convert resp.ContentLength to string
+			fmt.Fprint(os.Stdout, "\r"+outputString)
+			if redirected {
+				fmt.Fprint(os.Stdout, "redirected to ")
+			}
+			if resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently { //status code 302
+				redirUrl, _ := resp.Location()
+				testUrl(redirUrl.String(), showStatus, file_create, true)
+			}
 		}
 	}
 	_, err = file_create.WriteString(outputString)
