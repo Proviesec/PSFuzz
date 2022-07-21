@@ -88,7 +88,7 @@ func contains(s []string, str string) bool {
 	return false
 }
 
-func GetHtmlTitle(response *http.Response) (string, int) {
+func GetResponseDetails(response *http.Response) (string, int) {
 	// Get the response body as a string
 	dataInBytes, _ := ioutil.ReadAll(response.Body)
 	pageContent := string(dataInBytes)
@@ -230,7 +230,7 @@ func testUrl(url string, word string, showStatus string, file_create *os.File) {
 	var outputString string
 
 	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
-		title, length := GetHtmlTitle(resp)
+		title, length := GetResponseDetails(resp)
 		if strings.Contains(title, "404") {
 			title = title + " -- possibile a 404"
 		}
