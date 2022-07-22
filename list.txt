@@ -5,3 +5,6 @@ error
 config.xml
 config.txt
 readme.html
+log
+public
+static
