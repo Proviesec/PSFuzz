@@ -12,3 +12,4 @@ GOOS=darwin GOARCH=amd64 go build -o tmp/webdir-mac64.bin main.go
 
 chmod +x tmp/*
 upx -9 tmp/*
+
