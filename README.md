@@ -67,6 +67,8 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
 - [x] Wildcard parameter
 - [x] Progress bar
 - [ ] List of URLs
+- [ ] get list from any url 
+
 - [ ] Parameter
     - [ ] Port List
     - [ ] Length
