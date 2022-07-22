@@ -77,12 +77,12 @@ func init() {
 	flag.StringVar(&filterStatusNot, "fscn", "", "Show not this status code")
 
 	// get  length from the command line
-	flag.StringVar(&filterLength, "filterLength", "true", "Show only response length")
-	flag.StringVar(&filterLength, "fl", "true", "Show only response length")
+	flag.StringVar(&filterLength, "filterLength", "-1", "Show only response length")
+	flag.StringVar(&filterLength, "fl", "-1", "Show only response length")
 
 	// get not show length from the command line
-	flag.StringVar(&filterLengthNot, "filterLengthNot", "", "Don´t show this response length")
-	flag.StringVar(&filterLengthNot, "fln", "", "Don´t show this response length")
+	flag.StringVar(&filterLengthNot, "filterLengthNot", "-1", "Don´t show this response length")
+	flag.StringVar(&filterLengthNot, "fln", "-1", "Don´t show this response length")
 
 	flag.Parse()
 
@@ -250,7 +250,7 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	var outputString string
 	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
 		title, length := GetResponseDetails(resp)
-		if contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "true") {
+		if (contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) {
 			if strings.Contains(title, "404") {
 				title = title + " -- possibile a 404"
 			}
