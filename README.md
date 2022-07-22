@@ -68,10 +68,11 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
 - [x] Progress bar
 - [ ] List of URLs
 - [ ] get list from any url 
-
+- [ ] get list from proviesec github account 
 - [ ] Parameter
     - [ ] Port List
-    - [ ] Length
+    - [x] Length
+    - [ ] Length range 
     - [x] Response Status List show
     - [x] Response Status List not show
     - [ ] Words match list title/page
