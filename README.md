@@ -69,6 +69,7 @@ General
     - [ ] save config
     - [ ] yaml file 
 - [ ] Proxy
+- [ ] throttle 
 - [ ] Output
     - [x] TXT
     - [ ] HTML
