@@ -41,8 +41,8 @@ Options
  **Optional**
 * -s/-status Example: -s true Default:false only Status Code 200 
 * -c/-concurrency Example: -c 5
-* -fscn 
-* -fsc
+* -fscn  Example: -fscn 404  Don't show response status code 404
+* -fsc Example: -fsc 200,301 Show only response status code 200 and 301
 
 # Attack Configuration / Patterns
 
