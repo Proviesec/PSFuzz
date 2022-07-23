@@ -28,6 +28,8 @@ var mutex = &sync.Mutex{}
 
 var statuscount = map[string]int{}
 
+var default_payload_url = "https://raw.githubusercontent.com/Proviesec/directory-payload-list/main/directory-full-list.txt"
+
 var url string
 var dirlist = flag.String("dirlist", "", "Directory List")
 var showStatus string
@@ -49,7 +51,7 @@ func init() {
 	flag.StringVar(&url, "u", "", "URL")
 
 	// get directoryList parameter from name "directoryList" in the command line
-	flag.StringVar(dirlist, "d", "", "Directory List")
+	flag.StringVar(dirlist, "d", "default", "Directory List")
 
 	// get status parameter from the command lline
 	flag.StringVar(&showStatus, "showStatus", "false", "show status")
@@ -151,6 +153,25 @@ func lineCounter(r io.Reader) int {
 
 func urlFuzzScanner(directoryList []string) {
 	// open the text file directoryList and read the lines in it
+	if directoryList[0] == "default" {
+		dir_resp, err := http.Get(default_payload_url)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer dir_resp.Body.Close()
+		if dir_resp.StatusCode == 200 {
+			// get the response body as a string
+			dataInBytes, _ := ioutil.ReadAll(dir_resp.Body)
+			pageContent := string(dataInBytes)
+			payload_create, err := os.Create("default_payload.txt") // Truncates if file already exists, be careful!
+			if err != nil {
+				log.Fatalf("failed creating file: %s", err)
+			}
+			defer payload_create.Close()
+			_, err = payload_create.WriteString(pageContent)
+		}
+		directoryList[0] = "default_payload.txt"
+	}
 	file, err := os.Open(directoryList[0])
 	if err != nil {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
