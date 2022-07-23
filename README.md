@@ -41,6 +41,8 @@ Options
  **Optional**
 * -s/-status Example: -s true Default:false only Status Code 200 
 * -c/-concurrency Example: -c 5
+* -fscn 
+* -fsc
 
 # Attack Configuration / Patterns
 
