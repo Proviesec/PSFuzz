@@ -294,6 +294,21 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 }
 
 func main() {
+	fmt.Fprint(os.Stdout, "PSFuzz - Payload Scanner\n")
+	fmt.Fprint(os.Stdout, "Version: 0.8.0\n")
+	fmt.Fprint(os.Stdout, "Author: Proviesec\n")
+	// ouput ascii art
+	fmt.Fprint(os.Stdout, `                                                                                                                   
+%%%%%%%%%%%   %%%%%%%%%%%%   %%%%%%%%%%  %%%%    %%%% %%%%%%%%%%%% %%%%%%%%%%%%                 
+%%%%%%%%%%%%  %%%%%%%%%%%    %%%%        %%%%    %%%%        %%%%         %%%%                   
+        %%%%   %%%%          %%%%        %%%%    %%%%       %%           %%                        
+        %%%%      % %%%      %%%%%%%%%%  %%%%    %%%%   %%%          %%%                                      
+%%%%%%%%%            %%%%%   %%%%        %%%%    %%%%  %%%%         %%%%                                          
+%%%%          %%%%%%%%%%%%%  %%%%        %%%%%%%#%%%% %%%%%%%%%%%% %%%%%%%%%%%%                                   
+%%%            %%%%%%%%%%     %%           %%%%%%        %%%%%%%%    %%%%%%%%                       
+
+	`)
+
 	directoryList := strings.Split(*dirlist, ",")
 
 	// check the directory list, if the found in the url
