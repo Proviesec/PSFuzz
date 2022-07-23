@@ -93,7 +93,7 @@ Attack
 - [ ] List of URLs
 - [ ] Word list 
     - [ ] Automatic Word list for any file html,txt, php.. 
-         - [ ] include, start or end with specific word and max length 
+         - [ ] payload generator, include, start or end with specific word and max length 
          - [ ] file ending as parameter list 
     - [ ] get list from any url 
     - [ ] get list from proviesec github account 
