@@ -58,24 +58,19 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
 
 # Todos
 
+General
 - [x] Multi requests
 - [x] Optional param output
 - [x] check https or http
-- [x] Redirect handler - 301... -> Can be activated via parameter
-    - [ ] Show Redirect URL
-    - [ ] Skip Status filter if redirect true (via parameter)
+- [ ] optional config file
+    - [ ] load config 
+    - [ ] save config
+    - [ ] yaml file 
+- [ ] Proxy
 - [ ] Output
     - [x] TXT
     - [ ] HTML
-- [x] Wildcard parameter
 - [x] Progress bar
-- [ ] List of URLs
-- [ ] Word list 
-    - [ ] Automatic Word list for any file html,txt, php.. 
-         - [ ] include, start or end with specific word and max length 
-         - [ ] file ending as parameter list 
-    - [ ] get list from any url 
-    - [ ] get list from proviesec github account 
 - [ ] Parameter
     - [ ] Port List
     - [x] Length
@@ -86,6 +81,21 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
     - [ ] Set Optional Header
     - [ ] Set request Timeout
     - [ ] Add Cookies
+
+Attack
+- [x] Wordlist txt parameter 
+- [x] Wildcard parameter 
+- [ ] List of URLs
+- [ ] Word list 
+    - [ ] Automatic Word list for any file html,txt, php.. 
+         - [ ] include, start or end with specific word and max length 
+         - [ ] file ending as parameter list 
+    - [ ] get list from any url 
+    - [ ] get list from proviesec github account 
+
+
+Response Analysis
+- [x] show response status 
 - [ ] 403 Bypass, config 
 - [ ] Status bypass
 - [x] Show positiv false: status 200, but title 404
@@ -97,11 +107,9 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
-- [ ] optional config file
-    - [ ] load config 
-    - [ ] save config
-    - [ ] yaml file 
-- [ ] Proxy
+- [x] Redirect handler - 301... -> Can be activated via parameter
+    - [ ] Show Redirect URL
+    - [ ] Skip Status filter if redirect true (via parameter) 
       
 
 # Example
