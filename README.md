@@ -102,6 +102,7 @@ Attack
 
 Response Analysis
 - [x] show response status 
+- [ ] dump the response in files 
 - [ ] 403 Bypass, config 
 - [ ] Status bypass
 - [x] Show positiv false: status 200, but title 404
