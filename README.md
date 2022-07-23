@@ -67,8 +67,12 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s t
 - [x] Wildcard parameter
 - [x] Progress bar
 - [ ] List of URLs
-- [ ] get list from any url 
-- [ ] get list from proviesec github account 
+- [ ] Word list 
+    - [ ] Automatic Word list for any file html,txt, php.. 
+         - [ ] include, start or end with specific word and max length 
+         - [ ] file ending as parameter list 
+    - [ ] get list from any url 
+    - [ ] get list from proviesec github account 
 - [ ] Parameter
     - [ ] Port List
     - [x] Length
