@@ -99,6 +99,7 @@ Attack
          - [ ] file ending as parameter list 
     - [ ] get list from any url 
     - [ ] get list from proviesec github account 
+    - [ ] multiple word lists 
 - [ ] Crlf scan
 - [ ] open redirect scan
 
