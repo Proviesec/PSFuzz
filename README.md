@@ -88,6 +88,8 @@ General
     - [ ] Add Cookies
 
 Attack
+- [x] make GET requests 
+- [ ] make POST requests 
 - [x] Wordlist txt parameter 
 - [x] Wildcard parameter 
 - [ ] List of URLs
