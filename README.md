@@ -98,7 +98,7 @@ Attack
          - [ ] payload generator, include, start or end with specific word and max length 
          - [ ] file ending as parameter list 
     - [ ] get list from any url 
-    - [ ] get list from proviesec github account 
+    - [x] get list from proviesec github account default
     - [ ] multiple word lists 
 - [ ] Crlf scan
 - [ ] open redirect scan
