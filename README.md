@@ -94,6 +94,8 @@ Attack
          - [ ] file ending as parameter list 
     - [ ] get list from any url 
     - [ ] get list from proviesec github account 
+- [ ] Crlf scan
+- [ ] open redirect scan
 
 
 Response Analysis
