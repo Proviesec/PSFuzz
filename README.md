@@ -104,8 +104,11 @@ Attack
 Response Analysis
 - [x] show response status 
 - [ ] dump the response in files 
-- [ ] 403 Bypass, config 
-- [ ] Status bypass
+- [ ] bypass
+    - [ ] 403 Bypass, config 
+    - [ ] Status bypass
+- [ ] Words match list title/page/header 
+    - [ ] output the match line 
 - [x] Show positiv false: status 200, but title 404
 - [ ] Show possible false 200, same length of startsite... 
 - [x] Show titel of Page
