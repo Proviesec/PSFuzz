@@ -64,6 +64,7 @@ General
 - [x] Multi requests
 - [x] Optional param output
 - [x] check https or http
+- [x] Logo and Version output
 - [ ] optional config file
     - [ ] load config 
     - [ ] save config
