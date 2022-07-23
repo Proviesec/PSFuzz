@@ -42,6 +42,8 @@ Options
 * -s/-status Example: -s true Default:false only Status Code 200 
 * -c/-concurrency Example: -c 5
 
+# Attack Configuration / Patterns
+
 # Response Analysis 
 
 # Example
