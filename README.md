@@ -78,7 +78,9 @@ General
     - [x] Length
     - [ ] Length range 
     - [x] Response Status List show
+    - [ ] Response Status Range show
     - [x] Response Status List not show
+    - [ ] Response Status Range not show
     - [ ] Words match list title/page
     - [ ] Set Optional Header
     - [ ] Set request Timeout
