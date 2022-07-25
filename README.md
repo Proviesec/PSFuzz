@@ -51,12 +51,15 @@ Options
 # Example
 ```
 go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s true -fscn 404,301,302
+
+go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -s true -fl 122,1565-1569 -fln 1566-1568
 ```
 
 ![image](https://user-images.githubusercontent.com/6010786/180019908-3f693fbd-d80e-44ad-b5f9-523f3d74dee1.png)
 
 ![image](https://user-images.githubusercontent.com/6010786/180020081-a7111c58-ee4e-45a7-bcb1-7a27189a9915.png)
 
+![image](https://user-images.githubusercontent.com/6010786/180856025-6922fc14-9baf-4ba7-b5c0-6d2073c5b0c2.png)
 
 # Todos
 
