@@ -271,7 +271,7 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	var outputString string
 	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
 		title, length := GetResponseDetails(resp)
-		if (contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) {
+		if (contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length)) {
 			if strings.Contains(title, "404") {
 				title = title + " -- possibile a 404"
 			}
@@ -291,6 +291,32 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 		}
 	}
 	_, err = file_create.WriteString(outputString)
+}
+
+func checkLength(s string) bool {
+	for _, v := range filterLengthNotList {
+		// check if in v is the string "-" Example 10-200 and compare the two numbers
+		if strings.Contains(v, "-") {
+			// split the string in two parts
+			splitted := strings.Split(v, "-")
+			// check if the length is in the range
+			if splitted[0] <= s && s <= splitted[1] {
+				return false
+			}
+		}
+	}
+	for _, v := range filterLengthList {
+		// check if in v is the string "-" Example 10-200 and compare the two numbers
+		if strings.Contains(v, "-") {
+			// split the string in two parts
+			splitted := strings.Split(v, "-")
+			// check if the length is in the range
+			if splitted[0] <= s && s <= splitted[1] {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func main() {
