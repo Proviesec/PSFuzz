@@ -81,7 +81,7 @@ General
 - [ ] Parameter
     - [ ] Port List
     - [x] Length
-    - [ ] Length range 
+    - [x] Length range show and not show
     - [x] Response Status List show
     - [ ] Response Status Range show
     - [x] Response Status List not show
