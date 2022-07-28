@@ -117,6 +117,7 @@ Response Analysis
 - [ ] Words match list title/page/header 
     - [ ] output the match line 
 - [x] Show positiv false: status 200, but title 404
+- [ ] Show possible block response, after x requests "403 or too many request" 
 - [ ] Show possible false 200, same length of startsite... 
 - [x] Show titel of Page
 - [x] Show Response Body Length
