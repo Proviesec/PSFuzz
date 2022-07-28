@@ -118,7 +118,9 @@ Response Analysis
     - [ ] output the match line 
 - [x] Show positiv false: status 200, but title 404
 - [ ] Show possible block response, after x requests "403 or too many request" 
-- [ ] Show possible false 200, same length of startsite... 
+- [ ] Show possible false 200, same length of startsite...
+- [ ] Intilligence
+   - [ ] Automatically detect false 200 (really 404) or too many rediretcs and then restart again, with the exclusion of
 - [x] Show titel of Page
 - [x] Show Response Body Length
 - [ ] Fingerprint check 
