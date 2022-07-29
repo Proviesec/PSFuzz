@@ -293,6 +293,13 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	_, err = file_create.WriteString(outputString)
 }
 
+func checkStatus(status string) bool {
+	if contains(filterStatusCodeList, status) {
+		return true
+	}
+	return false
+}
+
 func checkLength(s string) bool {
 	for _, v := range filterLengthNotList {
 		// check if in v is the string "-" Example 10-200 and compare the two numbers
@@ -321,7 +328,7 @@ func checkLength(s string) bool {
 
 func main() {
 	fmt.Fprint(os.Stdout, "PSFuzz - Payload Scanner\n")
-	fmt.Fprint(os.Stdout, "Version: 0.8.0\n")
+	fmt.Fprint(os.Stdout, "Version: 0.8.1\n")
 	fmt.Fprint(os.Stdout, "Author: Proviesec\n")
 	// ouput ascii art
 	fmt.Fprint(os.Stdout, `                                                                                                                   
