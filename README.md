@@ -91,6 +91,8 @@ General
     - [ ] Set Optional Header
     - [ ] Set request Timeout
     - [ ] Add Cookies
+    - [ ] quite Mode 
+    - [ ] show only the urls 
 
 Attack
 - [x] make GET requests 
