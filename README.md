@@ -77,6 +77,8 @@ General
 - [ ] throttle 
 - [ ] Output
     - [x] TXT
+    - [ ] CSV
+    - [ ] Json
     - [ ] HTML
 - [x] Progress bar
 - [ ] Parameter
