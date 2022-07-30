@@ -93,6 +93,7 @@ General
     - [ ] Add Cookies
     - [ ] quite Mode 
     - [ ] show only the urls 
+    - [ ] user agent 
 
 Attack
 - [x] make GET requests 
