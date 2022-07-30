@@ -96,6 +96,7 @@ General
     - [ ] quite Mode 
     - [ ] show only the urls 
     - [ ] user agent 
+    - [ ] username /password basic Auth 
 
 Attack
 - [x] make GET requests 
