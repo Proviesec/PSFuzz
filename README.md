@@ -89,6 +89,7 @@ General
     - [ ] Response Status Range show
     - [x] Response Status List not show
     - [ ] Response Status Range not show
+    - [ ] Filter content type 
     - [ ] Words match list title/page
     - [ ] Set Optional Header
     - [ ] Set request Timeout
@@ -130,6 +131,7 @@ Response Analysis
    - [ ] Automatically detect false 200 (really 404) or too many rediretcs and then restart again, with the exclusion of
 - [x] Show titel of Page
 - [x] Show Response Body Length
+- [ ] show content type 
 - [ ] Fingerprint check 
 - [ ] fuzz Parameter check (normal Response vs. with paramter)
 - [ ] compare two scans 
