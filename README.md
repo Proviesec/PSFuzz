@@ -86,9 +86,9 @@ General
     - [x] Length
     - [x] Length range show and not show
     - [x] Response Status List show
-    - [ ] Response Status Range show
+    - [x] Response Status Range show
     - [x] Response Status List not show
-    - [ ] Response Status Range not show
+    - [x] Response Status Range not show
     - [ ] Filter content type 
     - [ ] Words match list title/page
     - [ ] Set Optional Header
