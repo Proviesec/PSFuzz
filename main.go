@@ -269,7 +269,7 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 
 	// create output string variable
 	var outputString string
-	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) {
+	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) || checkStatus(strconv.Itoa(resp.StatusCode)) {
 		title, length := GetResponseDetails(resp)
 		if (contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length)) {
 			if strings.Contains(title, "404") {
@@ -293,11 +293,29 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	_, err = file_create.WriteString(outputString)
 }
 
-func checkStatus(status string) bool {
-	if contains(filterStatusCodeList, status) {
-		return true
+func checkStatus(s string) bool {
+	for _, v := range filterStatusNotList {
+		// check if in v is the string "-" Example 200-250 and compare the two numbers
+		if strings.Contains(v, "-") {
+			// split the string in two parts
+			splitted := strings.Split(v, "-")
+			// check if the length is in the range
+			if splitted[0] <= s && s <= splitted[1] {
+				return false
+			}
+		}
 	}
-	return false
+	for _, v := range filterStatusCodeList {
+		// check if in v is the string "-" Example 400-405 and compare the two numbers
+		if strings.Contains(v, "-") {
+			// split the string in two parts
+			splitted := strings.Split(v, "-")
+			// check if the length is in the range
+			if splitted[0] <= s && s <= splitted[1] {
+				return true
+			}
+		}
+	}
 }
 
 func checkLength(s string) bool {
@@ -328,7 +346,7 @@ func checkLength(s string) bool {
 
 func main() {
 	fmt.Fprint(os.Stdout, "PSFuzz - Payload Scanner\n")
-	fmt.Fprint(os.Stdout, "Version: 0.8.1\n")
+	fmt.Fprint(os.Stdout, "Version: 0.8.0\n")
 	fmt.Fprint(os.Stdout, "Author: Proviesec\n")
 	// ouput ascii art
 	fmt.Fprint(os.Stdout, `                                                                                                                   
