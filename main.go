@@ -316,6 +316,7 @@ func checkStatus(s string) bool {
 			}
 		}
 	}
+	return false
 }
 
 func checkLength(s string) bool {
