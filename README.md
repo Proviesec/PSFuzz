@@ -68,6 +68,7 @@ General
 - [x] Optional param output
 - [x] check https or http
 - [x] Logo and Version output
+- [ ] Tryhackme room
 - [ ] help mode
 - [ ] optional config file
     - [ ] load config 
