@@ -37,7 +37,7 @@ Options
 * -u/-url Example: -u https://www.google.com
  
  **Optional**
-* -o/-Output Example: -o google_output Default: output.txt
+* -o/-Output Example: `-o google_output` Default: output.txt
 * -d/-dirlist Example: -d list.txt Default is https://raw.githubusercontent.com/Proviesec/directory-payload-list/main/directory-full-list.txt
 * -s/-status Example: -s true Default:false only Status Code 200 
 * -c/-concurrency Example: -c 5
