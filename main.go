@@ -269,7 +269,7 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 
 	// create output string variable
 	var outputString string
-	if (contains(filterStatusCodeList, strconv.Itoa(resp.StatusCode)) || showStatus == "true") && !contains(filterStatusNotList, strconv.Itoa(resp.StatusCode)) || checkStatus(strconv.Itoa(resp.StatusCode)) {
+	if checkStatus(strconv.Itoa(resp.StatusCode)) {
 		title, length := GetResponseDetails(resp)
 		if (contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length)) {
 			if strings.Contains(title, "404") {
@@ -294,6 +294,9 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 }
 
 func checkStatus(s string) bool {
+	if (contains(filterStatusCodeList, s) || showStatus == "true") && !contains(filterStatusNotList, s) {
+		return true
+	}
 	for _, v := range filterStatusNotList {
 		// check if in v is the string "-" Example 200-250 and compare the two numbers
 		if strings.Contains(v, "-") {
