@@ -43,7 +43,7 @@ Options
 * -c/-concurrency Example: -c 5
 * -fscn  Example: -fscn 404  Don't show response status code 404
 * -fsc Example: -fsc 200,301 Show only response status code 200 and 301
-* -fl Example: -fl 122,1234,1235,1236 or -fl 122,1234-1236 Show only the response with this length (or length range)
+* -fl Example: `-fl 122,1234,1235,1236` or -fl 122,1234-1236 Show only the response with this length (or length range)
 * -fln Example: -fln 122,1234,1235,1236 or -fln 122,1234-1236 Show not this response with this length (or length range)
 
 # Attack Configuration / Patterns
