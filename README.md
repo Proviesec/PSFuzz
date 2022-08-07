@@ -34,7 +34,7 @@ Wordlists
 Options
 ---------------
 **Required**
-* -u/-url Example: -u https://www.google.com
+* -u/-url Example: `-u https://www.google.com`
  
  **Optional**
 * -o/-Output Example: `-o google_output` Default: output.txt
