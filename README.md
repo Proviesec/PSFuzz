@@ -91,7 +91,7 @@ General
     - [x] Response Status List not show
     - [x] Response Status Range not show
     - [ ] Filter content type 
-    - [ ] Words match list title/page
+    - [x] Words match list title/page
     - [ ] Set Optional Header
     - [ ] Set request Timeout
     - [ ] Add Cookies
