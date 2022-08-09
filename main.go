@@ -37,6 +37,7 @@ var redirect string
 var concurrency int
 var output string
 var filterStatusCode string
+var filterMatchWord string
 var filterStatusCodeList []string
 var filterStatusNot string
 var filterStatusNotList []string
@@ -69,6 +70,10 @@ func init() {
 
 	flag.StringVar(&output, "output", "", "output")
 	flag.StringVar(&output, "o", "", "output")
+
+	// get filterMatchWord parameter from the command line
+	flag.StringVar(&filterMatchWord, "filterMatchWord", "", "filterMatchWord")
+	flag.StringVar(&filterMatchWord, "fm", "", "filterMatchWord")
 
 	// get list of show status codes from the command line
 	flag.StringVar(&filterStatusCode, "filterStatusCode", "", "Show only this status code")
@@ -110,26 +115,42 @@ func contains(s []string, str string) bool {
 	return false
 }
 
-func GetResponseDetails(response *http.Response) (string, int) {
+func GetResponseDetails(response *http.Response) (string, int, string) {
 	// Get the response body as a string
 	dataInBytes, _ := ioutil.ReadAll(response.Body)
 	pageContent := string(dataInBytes)
-
+	pageTitle := ""
 	// Find a substr
 	titleStartIndex := strings.Index(pageContent, "<title>")
 	if titleStartIndex == -1 {
-		return "No title element found", len(pageContent)
-	}
-	// <title> = length = 7
-	titleStartIndex += 7
+		pageTitle = "No title element found"
+	} else {
+		// <title> = length = 7
+		titleStartIndex += 7
 
-	// Find the index of the closing tag
-	titleEndIndex := strings.Index(pageContent, "</title>")
-	if titleEndIndex == -1 {
-		return "No closing tag for title found.", len(pageContent)
+		// Find the index of the closing tag
+		titleEndIndex := strings.Index(pageContent, "</title>")
+		if titleEndIndex == -1 {
+			pageTitle = "No closing tag for title found."
+		} else {
+			pageTitle = "Page title:" + string([]byte(pageContent[titleStartIndex:titleEndIndex]))
+		}
 	}
-	pageTitle := string([]byte(pageContent[titleStartIndex:titleEndIndex]))
-	return "Page title:" + pageTitle, len(pageContent)
+
+	matchWord := ""
+	if filterMatchWord != "" {
+		// if filterMatchWord in pageContent then output the 10 postions before and after the matchWord
+		if strings.Contains(pageContent, filterMatchWord) {
+			matchWordIndex := strings.Index(pageContent, filterMatchWord)
+			if matchWordIndex > 10 {
+				matchWord = pageContent[matchWordIndex-10 : matchWordIndex+10]
+			} else {
+				matchWord = pageContent[0 : matchWordIndex+10]
+			}
+		}
+	}
+
+	return pageTitle, len(pageContent), matchWord
 }
 
 func lineCounter(r io.Reader) int {
@@ -270,8 +291,8 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	// create output string variable
 	var outputString string
 	if checkStatus(strconv.Itoa(resp.StatusCode)) {
-		title, length := GetResponseDetails(resp)
-		if (contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length)) {
+		title, length, matchWord := GetResponseDetails(resp)
+		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
 			if strings.Contains(title, "404") {
 				title = title + " -- possibile a 404"
 			}
