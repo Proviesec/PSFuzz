@@ -296,6 +296,9 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 			if strings.Contains(title, "404") {
 				title = title + " -- possibile a 404"
 			}
+			if filterMatchWord != "" && matchWord != "" {
+				title = title + " -- MATCH: " + matchWord + " --"
+			}
 			if redirected {
 				outputString = "redirected to "
 			}
