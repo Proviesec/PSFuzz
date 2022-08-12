@@ -292,7 +292,6 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 		}
 	}
 
-	req.Header.Add("x-api-key", "my-secret-token")
 	// define the request with a timeout of 5 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
