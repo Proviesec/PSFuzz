@@ -93,7 +93,7 @@ General
     - [x] Response Status Range not show
     - [ ] Filter content type 
     - [x] Words match list title/page
-    - [ ] Set Optional Header
+    - [x] Set Optional Header
     - [ ] Set request Timeout
     - [ ] Add Cookies
     - [ ] quite Mode 
