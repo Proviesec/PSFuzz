@@ -36,6 +36,7 @@ var showStatus string
 var redirect string
 var concurrency int
 var output string
+var requestAddHeader string
 var filterStatusCode string
 var filterMatchWord string
 var filterStatusCodeList []string
@@ -90,6 +91,10 @@ func init() {
 	// get not show length from the command line
 	flag.StringVar(&filterLengthNot, "filterLengthNot", "-1", "Don´t show this response length")
 	flag.StringVar(&filterLengthNot, "fln", "-1", "Don´t show this response length")
+
+	// get add header from the command line
+	flag.StringVar(&requestAddHeader, "requestAddHeader", "", "Add header to request")
+	flag.StringVar(&requestAddHeader, "rah", "", "Add header to request")
 
 	flag.Parse()
 
@@ -274,6 +279,20 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	}
 	// set the user agent
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 (zz99)")
+
+	// if requestAddHeader is not empty then add the headers to the request
+	if requestAddHeader != "" {
+		headers := strings.Split(requestAddHeader, ",")
+		for _, header := range headers {
+			header = strings.TrimSpace(header)
+			headerSplit := strings.Split(header, ":")
+			if len(headerSplit) == 2 {
+				req.Header.Set(headerSplit[0], headerSplit[1])
+			}
+		}
+	}
+
+	req.Header.Add("x-api-key", "my-secret-token")
 	// define the request with a timeout of 5 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
