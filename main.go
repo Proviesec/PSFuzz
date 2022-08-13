@@ -34,6 +34,7 @@ var url string
 var dirlist = flag.String("dirlist", "", "Directory List")
 var showStatus string
 var redirect string
+var bypass string
 var concurrency int
 var output string
 var requestAddHeader string
@@ -62,6 +63,10 @@ func init() {
 	// get concurrency parameter from the command line
 	flag.StringVar(&redirect, "redirect", "true", "redirect")
 	flag.StringVar(&redirect, "3", "true", "redirect")
+
+	// get bypass parameter from the command line
+	flag.StringVar(&bypass, "bypass", "false", "bypass")
+	flag.StringVar(&bypass, "b", "false", "bypass")
 
 	// get concurrency parameter from the command line
 	flag.IntVar(&concurrency, "concurrency", 1, "concurrency")
@@ -256,14 +261,14 @@ func urlFuzzScanner(directoryList []string) {
 				url = url + word
 			}
 			// write the result to the file
-			testUrl(url, showStatus, file_create, false)
+			testUrl(url, showStatus, file_create, false, requestAddHeader, bypass)
 			<-concurrent
 		}(count, url, showStatus)
 	}
 	return
 }
 
-func testUrl(url string, showStatus string, file_create *os.File, redirected bool) {
+func testUrl(url string, showStatus string, file_create *os.File, redirected bool, requestHeader string, bypassResponse string) {
 
 	// create a new http client
 	client := &http.Client{
@@ -280,9 +285,9 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	// set the user agent
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 (zz99)")
 
-	// if requestAddHeader is not empty then add the headers to the request
-	if requestAddHeader != "" {
-		headers := strings.Split(requestAddHeader, ",")
+	// if requestHeader is not empty then add the headers to the request
+	if requestHeader != "" {
+		headers := strings.Split(requestHeader, ",")
 		for _, header := range headers {
 			header = strings.TrimSpace(header)
 			headerSplit := strings.Split(header, ":")
@@ -306,6 +311,10 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
 	mutex.Unlock()
 
+	responseAnalyse(resp, url, showStatus, file_create, redirected, bypassResponse)
+}
+
+func responseAnalyse(resp *http.Response, url string, showStatus string, file_create *os.File, redirected bool, bypassResponse string) {
 	// create output string variable
 	var outputString string
 	if checkStatus(strconv.Itoa(resp.StatusCode)) {
@@ -328,11 +337,19 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 			}
 			if resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently { //status code 302
 				redirUrl, _ := resp.Location()
-				testUrl(redirUrl.String(), showStatus, file_create, true)
+				testUrl(redirUrl.String(), showStatus, file_create, true, requestAddHeader, bypassResponse)
 			}
 		}
+		if resp.StatusCode == http.StatusForbidden && bypassResponse == "true" {
+			bypassStatusCode403(url, showStatus, file_create)
+		}
 	}
-	_, err = file_create.WriteString(outputString)
+	_, _ = file_create.WriteString(outputString)
+}
+
+func bypassStatusCode403(url string, showStatus string, file_create *os.File) {
+	requestHeader := "Host:Localhost"
+	testUrl(url, showStatus, file_create, false, requestHeader, "false")
 }
 
 func checkStatus(s string) bool {
