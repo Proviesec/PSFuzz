@@ -47,6 +47,7 @@ Options
 * `-fln` Example: `-fln 122,1234,1235,1236` or `-fln 122,1234-1236` Show not this response with this length (or length range)
 * `-fm` Example: `-fm admin`
 * `-rah` Example: `-rah Host:127.0.0.1`
+* `-b` Example: `-b true`
 
 # Attack Configuration / Patterns
 
