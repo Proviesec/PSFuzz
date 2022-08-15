@@ -62,7 +62,7 @@ func init() {
 
 	// get concurrency parameter from the command line
 	flag.StringVar(&redirect, "redirect", "true", "redirect")
-	flag.StringVar(&redirect, "3", "true", "redirect")
+	flag.StringVar(&redirect, "r", "true", "redirect")
 
 	// get bypass parameter from the command line
 	flag.StringVar(&bypass, "bypass", "false", "bypass")
@@ -270,6 +270,9 @@ func urlFuzzScanner(directoryList []string) {
 
 func testUrl(url string, showStatus string, file_create *os.File, redirected bool, requestHeader string, bypassResponse string) {
 
+	if requestHeader != "" {
+		requestHeader = requestAddHeader
+	}
 	// create a new http client
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -340,16 +343,27 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 				testUrl(redirUrl.String(), showStatus, file_create, true, requestAddHeader, bypassResponse)
 			}
 		}
-		if resp.StatusCode == http.StatusForbidden && bypassResponse == "true" {
-			bypassStatusCode403(url, showStatus, file_create)
+		if (resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized) && bypassResponse == "true" {
+			bypassStatusCode40x(url, showStatus, file_create)
 		}
 	}
 	_, _ = file_create.WriteString(outputString)
 }
 
-func bypassStatusCode403(url string, showStatus string, file_create *os.File) {
-	requestHeader := "Host:Localhost"
-	testUrl(url, showStatus, file_create, false, requestHeader, "false")
+func bypassStatusCode40x(url string, showStatus string, file_create *os.File) {
+
+	arrayPath := [11]string{"/*", "//.", "/%2e/", "/%2f/", "/./", "/", "/*/", "/..;/", "/..%3B/", "////", "/%20"}
+	for _, element := range arrayPath {
+		testUrl(url+element, showStatus, file_create, false, "", "false")
+	}
+	arrayExtensions := [10]string{".yml", ".php", ".html", ".zip", ".txt", ".yaml", ".wadl", ".htm", ".asp", ".aspx"}
+	for _, element := range arrayExtensions {
+		testUrl(url+element, showStatus, file_create, false, "", "false")
+	}
+	arrayHeader := [6]string{"X-Custom-IP-Authorization127.0.0.1", "Host:Localhost", "X-Forwarded-For:127.0.0.1:80", "X-Forwarded-For:http://127.0.0.1", "X-Custom-IP-Authorization:127.0.0.1", "Content-Length:0"}
+	for _, element := range arrayHeader {
+		testUrl(url, showStatus, file_create, false, element, "false")
+	}
 }
 
 func checkStatus(s string) bool {
