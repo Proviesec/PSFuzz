@@ -43,8 +43,8 @@ Options
 * `-c`/`-concurrency` Example:  `-c 5 `
 * `-fscn`/`-filterStatusCodeNot`  Example: `-fscn 404`  Don't show response status code 404
 * `-fsc`/`-filterStatusCode` Example: `-fsc 200,301` Show only response status code 200 and 301
-* `-fl`/filterLength Example: `-fl 122,1234,1235,1236` or `-fl 122,1234-1236` Show only the response with this length (or length range)
-* `-fln`/filterLengthNot Example: `-fln 122,1234,1235,1236` or `-fln 122,1234-1236` Show not this response with this length (or length range)
+* `-fl`/`-filterLength` Example: `-fl 122,1234,1235,1236` or `-fl 122,1234-1236` Show only the response with this length (or length range)
+* `-fln`/`-filterLengthNot` Example: `-fln 122,1234,1235,1236` or `-fln 122,1234-1236` Show not this response with this length (or length range)
 * `-fm`/filterMatchWord Example: `-fm admin`
 * `-rah`/requestAddHeader Example: `-rah Host:127.0.0.1`
 * `-b`/bypass Example: `-b true`
