@@ -8,3 +8,4 @@ readme.html
 log
 public
 static
+vendor
