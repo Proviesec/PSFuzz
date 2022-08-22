@@ -9,3 +9,5 @@ log
 public
 static
 vendor
+config
+robots.txt
