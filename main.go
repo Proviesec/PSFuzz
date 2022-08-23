@@ -39,6 +39,8 @@ var concurrency int
 var output string
 var requestAddHeader string
 var filterStatusCode string
+var filterContentType string
+var filterContentTypeList []string
 var filterMatchWord string
 var filterStatusCodeList []string
 var filterStatusNot string
@@ -77,6 +79,10 @@ func init() {
 	flag.StringVar(&output, "output", "", "output")
 	flag.StringVar(&output, "o", "", "output")
 
+	// get filterContentType parameter from the command line
+	flag.StringVar(&filterContentType, "filterContentType", "", "filterContentType")
+	flag.StringVar(&filterContentType, "f", "", "filterContentType")
+
 	// get filterMatchWord parameter from the command line
 	flag.StringVar(&filterMatchWord, "filterMatchWord", "", "filterMatchWord")
 	flag.StringVar(&filterMatchWord, "fm", "", "filterMatchWord")
@@ -105,6 +111,7 @@ func init() {
 
 	filterStatusCodeList = strings.Split(filterStatusCode, ",")
 	filterStatusNotList = strings.Split(filterStatusNot, ",")
+	filterContentTypeList = strings.Split(filterContentType, ",")
 
 	filterLengthList = strings.Split(filterLength, ",")
 	filterLengthNotList = strings.Split(filterLengthNot, ",")
@@ -320,7 +327,7 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 func responseAnalyse(resp *http.Response, url string, showStatus string, file_create *os.File, redirected bool, bypassResponse string) {
 	// create output string variable
 	var outputString string
-	if checkStatus(strconv.Itoa(resp.StatusCode)) {
+	if checkStatus(strconv.Itoa(resp.StatusCode)) && checkContentType(resp.Header.Get("Content-Type")) {
 		title, length, matchWord := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
 			if strings.Contains(title, "404") {
@@ -364,6 +371,12 @@ func bypassStatusCode40x(url string, showStatus string, file_create *os.File) {
 	for _, element := range arrayHeader {
 		testUrl(url, showStatus, file_create, false, element, "false")
 	}
+}
+func checkContentType(contentType string) bool {
+	if contains(filterContentTypeList, contentType) || contains(filterContentTypeList, "") {
+		return true
+	}
+	return false
 }
 
 func checkStatus(s string) bool {
