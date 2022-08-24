@@ -110,6 +110,7 @@ General
 Attack
 - [x] make GET requests 
 - [ ] make POST requests 
+- [ ] try PUT/DELETE/PATCH
 - [x] Wordlist txt parameter 
 - [x] Wildcard parameter 
 - [ ] List of URLs
