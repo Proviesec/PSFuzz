@@ -137,6 +137,7 @@ Response Analysis
 - [ ] Show possible false 200, same length of startsite...
 - [ ] Intilligence
    - [ ] Automatically detect false 200 (really 404) or too many rediretcs and then restart again, with the exclusion of
+   - [ ] Show the most unique target 
 - [x] Show titel of Page
 - [x] Show Response Body Length
 - [ ] show content type 
