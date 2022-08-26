@@ -104,7 +104,7 @@ General
     - [ ] Add Cookies
     - [ ] quite Mode 
     - [ ] show only the urls 
-    - [ ] user agent 
+    - [x] add user agent
     - [ ] username /password basic Auth 
 
 Attack
