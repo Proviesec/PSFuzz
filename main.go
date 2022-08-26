@@ -38,6 +38,7 @@ var bypass string
 var concurrency int
 var output string
 var requestAddHeader string
+var requestAddAgent string
 var filterStatusCode string
 var filterContentType string
 var filterContentTypeList []string
@@ -106,6 +107,10 @@ func init() {
 	// get add header from the command line
 	flag.StringVar(&requestAddHeader, "requestAddHeader", "", "Add header to request")
 	flag.StringVar(&requestAddHeader, "rah", "", "Add header to request")
+
+	// get add agent from the command line
+	flag.StringVar(&requestAddAgent, "requestAddAgent", "", "Add agent to request")
+	flag.StringVar(&requestAddAgent, "raa", "", "Add agent to request")
 
 	flag.Parse()
 
@@ -293,7 +298,11 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 		return
 	}
 	// set the user agent
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 (zz99)")
+	if requestAddAgent != "" {
+		req.Header.Set("User-Agent", requestAddAgent)
+	} else {
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36 (zz99)")
+	}
 
 	// if requestHeader is not empty then add the headers to the request
 	if requestHeader != "" {
