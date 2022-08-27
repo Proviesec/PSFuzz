@@ -127,6 +127,7 @@ Attack
 
 Response Analysis
 - [x] show response status 
+- [ ] show possibile parameter
 - [ ] dump the response in files 
 - [ ] bypass
     - [ ] 403 Bypass, config 
