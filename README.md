@@ -88,6 +88,7 @@ General
     - [ ] HTML
 - [x] Progress bar
 - [ ] Parameter
+    - [ ] random payload generator 
     - [ ] choice of dirlist from proviesec github repo
     - [ ] subdomain list from proviesec github repo
     - [ ] Port List
