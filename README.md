@@ -124,7 +124,7 @@ Attack
     - [ ] multiple word lists 
 - [ ] Crlf scan
 - [ ] open redirect scan
-- [ ] fuzzing parameter 
+- [ ] fuzzing parameter (from a-z)
 - [ ] fuzzing http verbs
 
 
