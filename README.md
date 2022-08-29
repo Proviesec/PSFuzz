@@ -127,12 +127,11 @@ Attack
 - [ ] fuzzing parameter (from a-z)
 - [ ] fuzzing http verbs
 
-
-
 Response Analysis
 - [x] show response status 
 - [ ] show possibile parameter
 - [ ] dump the response in files 
+- [ ] Fingerprint Software (Wordpress/Apache/nginx etc.)
 - [ ] bypass
     - [ ] 403 Bypass, config 
     - [ ] Status bypass
