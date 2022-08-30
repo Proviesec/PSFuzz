@@ -30,7 +30,6 @@ Wordlists
   - the Wordlist is a text file, each line is a path.
   - Here you get suitable lists: https://github.com/Proviesec/directory-payload-list
 
-
 Options
 ---------------
 **Required**
@@ -158,4 +157,3 @@ Response Analysis
 
 # Example
 go run main.go -url https://www.google.com -d list.txt -s true -c 2
-
