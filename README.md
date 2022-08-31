@@ -154,6 +154,5 @@ Response Analysis
     - [ ] Show Redirect URL
     - [ ] Skip Status filter if redirect true (via parameter) 
       
-
 # Example
 `go run main.go -url https://www.google.com -d list.txt -s true -c 2`
