@@ -131,6 +131,7 @@ Response Analysis
 - [ ] show possibile parameter
 - [ ] dump the response in files 
 - [ ] Fingerprint Software (Wordpress/Apache/nginx etc.)
+- [ ] CORS analyse
 - [ ] bypass
     - [ ] 403 Bypass, config 
     - [ ] Status bypass
