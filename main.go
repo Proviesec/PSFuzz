@@ -31,7 +31,8 @@ var statuscount = map[string]int{}
 var default_payload_url = "https://raw.githubusercontent.com/Proviesec/directory-payload-list/main/directory-full-list.txt"
 
 var url string
-var dirlist = flag.String("dirlist", "", "Directory List")
+var dirlist string
+var generate_payload string
 var showStatus string
 var redirect string
 var bypass string
@@ -57,7 +58,12 @@ func init() {
 	flag.StringVar(&url, "u", "", "URL")
 
 	// get directoryList parameter from name "directoryList" in the command line
-	flag.StringVar(dirlist, "d", "default", "Directory List")
+	flag.StringVar(&dirlist, "dirlist", "", "Directory List")
+	flag.StringVar(&dirlist, "d", "default", "Directory List")
+
+	//get generate_payload parameter from name "generate_payload" in the command line
+	flag.StringVar(&generate_payload, "generate_payload", "", "Generate Payload")
+	flag.StringVar(&generate_payload, "g", "", "Generate Payload")
 
 	// get status parameter from the command lline
 	flag.StringVar(&showStatus, "showStatus", "false", "show status")
@@ -193,6 +199,15 @@ func lineCounter(r io.Reader) int {
 		}
 	}
 }
+func NextAlias(last string) string {
+	if last == "" {
+		return "a"
+	} else if last[len(last)-1] == 'z' {
+		return last[:len(last)-1] + "aa"
+	} else {
+		return last[:len(last)-1] + string(last[len(last)-1]+1)
+	}
+}
 
 func urlFuzzScanner(directoryList []string) {
 	// open the text file directoryList and read the lines in it
@@ -215,6 +230,20 @@ func urlFuzzScanner(directoryList []string) {
 		}
 		directoryList[0] = "default_payload.txt"
 	}
+	if generate_payload == "true" {
+		payload_create, err := os.Create("random_payload.txt") // Truncates if file already exists, be careful!
+		if err != nil {
+			log.Fatalf("failed creating file: %s", err)
+		}
+		last := ""
+		for i := 0; i < 111; i++ {
+			next := NextAlias(last)
+			_, err = payload_create.WriteString(next + "")
+			last = next
+		}
+		directoryList[0] = "random_payload.txt"
+	}
+
 	file, err := os.Open(directoryList[0])
 	if err != nil {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
@@ -459,7 +488,7 @@ func main() {
 
 	`)
 
-	directoryList := strings.Split(*dirlist, ",")
+	directoryList := strings.Split(dirlist, ",")
 
 	// check the directory list, if the found in the url
 	urlFuzzScanner(directoryList)
