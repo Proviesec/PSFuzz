@@ -33,6 +33,7 @@ var default_payload_url = "https://raw.githubusercontent.com/Proviesec/directory
 var url string
 var dirlist string
 var generate_payload string
+var generate_payload_length int
 var showStatus string
 var redirect string
 var bypass string
@@ -123,6 +124,7 @@ func init() {
 	filterStatusCodeList = strings.Split(filterStatusCode, ",")
 	filterStatusNotList = strings.Split(filterStatusNot, ",")
 	filterContentTypeList = strings.Split(filterContentType, ",")
+	generate_payload_length, _ = strconv.Atoi(generate_payload)
 
 	filterLengthList = strings.Split(filterLength, ",")
 	filterLengthNotList = strings.Split(filterLengthNot, ",")
@@ -236,7 +238,7 @@ func urlFuzzScanner(directoryList []string) {
 			log.Fatalf("failed creating file: %s", err)
 		}
 		last := ""
-		for i := 0; i < 111; i++ {
+		for i := 0; i < generate_payload_length; i++ {
 			next := NextAlias(last)
 			_, err = payload_create.WriteString(next + "")
 			last = next
