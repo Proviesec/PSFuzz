@@ -126,6 +126,10 @@ func init() {
 	filterContentTypeList = strings.Split(filterContentType, ",")
 	generate_payload_length, _ = strconv.Atoi(generate_payload)
 
+	if generate_payload_length < 0 || generate_payload_length > 20000 {
+		generate_payload_length = 20000
+	}
+
 	filterLengthList = strings.Split(filterLength, ",")
 	filterLengthNotList = strings.Split(filterLengthNot, ",")
 
