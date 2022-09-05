@@ -47,7 +47,7 @@ Options
 * `-fm`/`-filterMatchWord` Example: `-fm admin`
 * `-rah`/`-requestAddHeader` Example: `-rah Host:127.0.0.1`
 * `-b`/`-bypass` Example: `-b true`
-
+* `-g`/`-generate_payload` Example: `-g 100`
 
 
 # Attack Configuration / Patterns
