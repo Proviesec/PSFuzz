@@ -478,6 +478,7 @@ func checkLength(s string) bool {
 	return false
 }
 
+
 func main() {
 	fmt.Fprint(os.Stdout, "PSFuzz - Payload Scanner\n")
 	fmt.Fprint(os.Stdout, "Version: 0.8.0\n")
