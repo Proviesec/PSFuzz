@@ -11,3 +11,6 @@ static
 vendor
 config
 robots.txt
+configuration
+git
+docker
