@@ -50,7 +50,9 @@ Options
 * `-g`/`-generate_payload` Example: `-g 100`
 
 
+
 # Attack Configuration / Patterns
+
 
 # Response Analysis 
 
