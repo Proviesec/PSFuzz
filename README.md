@@ -150,6 +150,7 @@ Response Analysis
 - [ ] show content type 
 - [ ] Fingerprint check 
 - [ ] fuzz Parameter check (normal Response vs. with paramter)
+- [ ] show reflected cookie 
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
