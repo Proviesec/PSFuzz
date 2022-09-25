@@ -151,6 +151,7 @@ Response Analysis
 - [ ] Fingerprint check 
 - [ ] fuzz Parameter check (normal Response vs. with paramter)
 - [ ] show reflected cookie 
+- [ ] show reflected params
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
