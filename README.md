@@ -152,6 +152,7 @@ Response Analysis
 - [ ] fuzz Parameter check (normal Response vs. with paramter)
 - [ ] show reflected cookie 
 - [ ] show reflected params
+- [ ] show reflected base64
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
