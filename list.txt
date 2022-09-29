@@ -1,5 +1,6 @@
 htaccess
 admin
+wp-admin
 .git
 error
 config.xml
