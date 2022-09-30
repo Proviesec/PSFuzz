@@ -81,7 +81,8 @@ General
     - [ ] save config
     - [ ] yaml file 
 - [ ] Proxy
-- [ ] throttle 
+- [ ] throttle
+- [ ] detect "too many requests" 
 - [ ] Output
     - [x] TXT
     - [ ] CSV
