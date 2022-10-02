@@ -5,6 +5,8 @@ wp-admin
 error
 config.xml
 config.txt
+backup.bz
+backup.zip
 readme.html
 log
 public
