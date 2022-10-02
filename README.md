@@ -75,7 +75,7 @@ General
 - [x] check https or http
 - [x] Logo and Version output
 - [ ] Tryhackme room
-- [ ] help mode
+- [ ] help mode ( -h )
 - [ ] optional config file
     - [ ] load config 
     - [ ] save config
