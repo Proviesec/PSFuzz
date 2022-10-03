@@ -402,8 +402,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 }
 
 func bypassStatusCode40x(url string, showStatus string, file_create *os.File) {
-
-	arrayPath := [11]string{"/*", "//.", "/%2e/", "/%2f/", "/./", "/", "/*/", "/..;/", "/..%3B/", "////", "/%20"}
+	arrayPath := [13]string{"/*", "//.", "/%2e/", "/%2f/", "/./", "/", "/*/", "/..;/", "/..%3B/", "////", "/%20", "%00", "#test"}
 	for _, element := range arrayPath {
 		testUrl(url+element, showStatus, file_create, false, "", "false")
 	}
