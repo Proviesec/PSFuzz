@@ -48,6 +48,7 @@ Options
 * `-rah`/`-requestAddHeader` Example: `-rah Host:127.0.0.1`
 * `-b`/`-bypass` Example: `-b true`
 * `-g`/`-generate_payload` Example: `-g 100`
+* `-od`/`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
 
 
 
