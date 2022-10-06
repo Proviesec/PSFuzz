@@ -39,6 +39,7 @@ var redirect string
 var bypass string
 var concurrency int
 var output string
+var onlydomains string
 var requestAddHeader string
 var requestAddAgent string
 var filterStatusCode string
@@ -69,6 +70,10 @@ func init() {
 	// get status parameter from the command lline
 	flag.StringVar(&showStatus, "showStatus", "false", "show status")
 	flag.StringVar(&showStatus, "s", "false", "show status")
+
+	// get onlydomains parameter from the command lline
+	flag.StringVar(&onlydomains, "onlydomains", "false", "only domains")
+	flag.StringVar(&onlydomains, "od", "false", "only domains")
 
 	// get concurrency parameter from the command line
 	flag.StringVar(&redirect, "redirect", "true", "redirect")
@@ -384,6 +389,9 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 				outputString = "redirected to "
 			}
 			outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " " + strconv.Itoa(length) + "\n"
+			if onlydomains == "true" {
+				outputString = outputString + url + "\n"
+			}
 			// convert resp.ContentLength to string
 			fmt.Fprint(os.Stdout, "\r"+outputString)
 			if redirected {
@@ -402,6 +410,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 }
 
 func bypassStatusCode40x(url string, showStatus string, file_create *os.File) {
+
 	arrayPath := [13]string{"/*", "//.", "/%2e/", "/%2f/", "/./", "/", "/*/", "/..;/", "/..%3B/", "////", "/%20", "%00", "#test"}
 	for _, element := range arrayPath {
 		testUrl(url+element, showStatus, file_create, false, "", "false")
@@ -476,7 +485,6 @@ func checkLength(s string) bool {
 	}
 	return false
 }
-
 
 func main() {
 	fmt.Fprint(os.Stdout, "PSFuzz - Payload Scanner\n")
