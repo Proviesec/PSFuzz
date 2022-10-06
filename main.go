@@ -389,9 +389,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 				outputString = "redirected to "
 			}
 			outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " " + strconv.Itoa(length) + "\n"
-			if onlydomains == "true" {
-				outputString = outputString + url + "\n"
-			}
+
 			// convert resp.ContentLength to string
 			fmt.Fprint(os.Stdout, "\r"+outputString)
 			if redirected {
@@ -400,6 +398,9 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 			if resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently { //status code 302
 				redirUrl, _ := resp.Location()
 				testUrl(redirUrl.String(), showStatus, file_create, true, requestAddHeader, bypassResponse)
+			}
+			if onlydomains == "true" {
+				outputString = outputString + url + "\n"
 			}
 		}
 		if (resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized) && bypassResponse == "true" {
