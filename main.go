@@ -400,7 +400,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 				testUrl(redirUrl.String(), showStatus, file_create, true, requestAddHeader, bypassResponse)
 			}
 			if onlydomains == "true" {
-				outputString = outputString + url + "\n"
+				outputString = url + "\n"
 			}
 		}
 		if (resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized) && bypassResponse == "true" {
