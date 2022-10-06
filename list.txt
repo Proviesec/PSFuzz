@@ -17,3 +17,5 @@ robots.txt
 configuration
 git
 docker
+monitoring
+api
