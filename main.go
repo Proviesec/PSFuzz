@@ -400,6 +400,13 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 				testUrl(redirUrl.String(), showStatus, file_create, true, requestAddHeader, bypassResponse)
 			}
 			if onlydomains == "true" {
+				// if url string start with http:// or https:// then remove it
+				if strings.HasPrefix(url, "http://") {
+					url = strings.Replace(url, "http://", "", 1)
+				}
+				if strings.HasPrefix(url, "https://") {
+					url = strings.Replace(url, "https://", "", 1)
+				}
 				outputString = url + "\n"
 			}
 		}
