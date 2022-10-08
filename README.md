@@ -119,6 +119,7 @@ Attack
 - [x] Wordlist txt parameter 
 - [x] Wildcard parameter 
 - [ ] List of URLs
+- [ ] depth by dir
 - [ ] Word list 
     - [ ] Automatic Word list for any file html,txt, php.. 
          - [ ] payload generator, include, start or end with specific word and max length 
