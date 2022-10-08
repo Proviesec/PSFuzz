@@ -107,7 +107,8 @@ General
     - [ ] Set request Timeout
     - [ ] Add Cookies
     - [ ] quite Mode 
-    - [ ] show only the urls 
+    - [ ] random user-agent
+    - [x] show only the urls 
     - [x] add user agent
     - [ ] username /password basic Auth 
 
