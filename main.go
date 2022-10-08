@@ -395,7 +395,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 			if redirected {
 				fmt.Fprint(os.Stdout, "redirected to ")
 			}
-			if resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently { //status code 302
+			if redirect == "true" && (resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusMovedPermanently) { //status code 302
 				redirUrl, _ := resp.Location()
 				testUrl(redirUrl.String(), showStatus, file_create, true, requestAddHeader, bypassResponse)
 			}
