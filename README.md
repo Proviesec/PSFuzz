@@ -90,6 +90,7 @@ General
     - [ ] Json
     - [ ] HTML
 - [x] Progress bar
+- [ ] list of sites
 - [ ] Parameter
     - [ ] random payload generator 
     - [ ] choice of dirlist from proviesec github repo
