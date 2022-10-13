@@ -1,5 +1,5 @@
 ![PSFuzz](https://user-images.githubusercontent.com/6010786/176360134-adc6d195-60b0-4628-af06-b6b42afaffae.png)
-![](https://us-central1-progress-markdown.cloudfunctions.net/progress/70)
+![](https://us-central1-progress-markdown.cloudfunctions.net/progress/75)
 # PSFuzz - ProvieSec Fuzz Scanner - Web path discovery
 [![License](https://img.shields.io/badge/license-MIT-_red.svg)](https://opensource.org/licenses/MIT)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwisiswant0/go-dork/issues)
@@ -46,8 +46,8 @@ Options
 * `-fln`/`-filterLengthNot` Example: `-fln 122,1234,1235,1236` or `-fln 122,1234-1236` Show not this response with this length (or length range)
 * `-fm`/`-filterMatchWord` Example: `-fm admin`
 * `-rah`/`-requestAddHeader` Example: `-rah Host:127.0.0.1`
-* `-b`/`-bypass` Example: `-b true`
-* `-g`/`-generate_payload` Example: `-g 100`
+* `-b`/`-bypass` Example: `-b true` -> bypass status code: 401,402,403
+* `-g`/`-generate_payload` Example: `-g 100` -> generate a,aa,ab,abc,aaa,abb,bbc
 * `-od`/`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
 
 
