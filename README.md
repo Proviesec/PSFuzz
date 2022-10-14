@@ -9,7 +9,19 @@
 </a>
 <a href="https://www.buymeacoffee.com/proviesec" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
-# Introduction 
+Table of Contents
+------------
+* [Introduction](#introduction)
+* [Installation](#installation--usage)
+* [Wordlists](#wordlists-important)
+* [Options](#options)
+* [How to use](#how-to-use)
+* [Todos](#todos)
+* [Tips](#tips)
+* [License](#license)
+
+Introduction 
+------------
 
 :star: Star us on GitHub — it motivates a lot! :star:
 
