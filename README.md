@@ -177,6 +177,6 @@ Response Analysis
 - [x] Redirect handler - 301... -> Can be activated via parameter
     - [ ] Show Redirect URL
     - [ ] Skip Status filter if redirect true (via parameter) 
-      
+       
 # Example
 `go run main.go -url https://www.google.com -d list.txt -s true -c 2`
