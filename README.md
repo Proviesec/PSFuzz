@@ -61,7 +61,8 @@ Options
 * `-rah`/`-requestAddHeader` Example: `-rah Host:127.0.0.1`
 * `-b`/`-bypass` Example: `-b true` -> bypass status code: 401,402,403
 * `-g`/`-generate_payload` Example: `-g 100` -> generate a,aa,ab,abc,aaa,abb,bbc
-* `-od`/`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
+* `-od` /`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
+* `fws` / `filterWrongStatus200` Example: -fws true
 
 
 
