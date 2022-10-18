@@ -383,8 +383,8 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 	if checkStatus(strconv.Itoa(resp.StatusCode)) && checkContentType(resp.Header.Get("Content-Type")) {
 		title, length, matchWord := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
-			if filterWrongStatus200 == "true" && resp.StatusCode == 200 {
-				if strings.Contains(title, "404") || strings.Contains(title, "Not Found") || strings.Contains(title, "Error") || strings.Contains(title, "403") || strings.Contains(title, "Forbidden") || strings.Contains(title, "500") || strings.Contains(title, "Internal Server Error") || length <= 0 {
+			if filterWrongStatus200 == "true" {
+				if strings.Contains(title, "404") || strings.Contains(title, "Not Found") || strings.Contains(title, "Error") || strings.Contains(title, "403") || strings.Contains(title, "Forbidden") || strings.Contains(title, "500") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 0 {
 					return
 				}
 			}
