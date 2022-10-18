@@ -42,6 +42,7 @@ var output string
 var onlydomains string
 var requestAddHeader string
 var requestAddAgent string
+var filterWrongStatus200 string
 var filterStatusCode string
 var filterContentType string
 var filterContentTypeList []string
@@ -88,9 +89,12 @@ func init() {
 	flag.IntVar(&concurrency, "c", 1, "concurrency")
 
 	// get output parameter from the command line
-
 	flag.StringVar(&output, "output", "", "output")
 	flag.StringVar(&output, "o", "", "output")
+
+	// get filterWrongStatus200 parameter from the command line
+	flag.StringVar(&filterWrongStatus200, "filterWrongStatus200", "false", "filterWrongStatus200")
+	flag.StringVar(&filterWrongStatus200, "fws", "false", "filterWrongStatus200")
 
 	// get filterContentType parameter from the command line
 	flag.StringVar(&filterContentType, "filterContentType", "", "filterContentType")
@@ -379,6 +383,11 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 	if checkStatus(strconv.Itoa(resp.StatusCode)) && checkContentType(resp.Header.Get("Content-Type")) {
 		title, length, matchWord := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
+			if filterWrongStatus200 == "true" && resp.StatusCode == 200 {
+				if strings.Contains(title, "404") || strings.Contains(title, "Not Found") || strings.Contains(title, "Error") || strings.Contains(title, "403") || strings.Contains(title, "Forbidden") || strings.Contains(title, "500") || strings.Contains(title, "Internal Server Error") || length <= 0 {
+					return
+				}
+			}
 			if strings.Contains(title, "404") {
 				title = title + " -- possibile a 404"
 			}
