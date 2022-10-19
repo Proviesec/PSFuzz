@@ -158,11 +158,12 @@ func contains(s []string, str string) bool {
 	return false
 }
 
-func GetResponseDetails(response *http.Response) (string, int, string) {
+func GetResponseDetails(response *http.Response) (string, int, string, int) {
 	// Get the response body as a string
 	dataInBytes, _ := ioutil.ReadAll(response.Body)
 	pageContent := string(dataInBytes)
 	pageTitle := ""
+	pageBody := ""
 	// Find a substr
 	titleStartIndex := strings.Index(pageContent, "<title>")
 	if titleStartIndex == -1 {
@@ -192,8 +193,19 @@ func GetResponseDetails(response *http.Response) (string, int, string) {
 			}
 		}
 	}
+	bodyStartIndex := strings.Index(pageContent, "<body>")
+	if bodyStartIndex != -1 {
+		// <body> = length = 6
+		bodyStartIndex += 6
 
-	return pageTitle, len(pageContent), matchWord
+		// Find the index of the closing tag
+		bodyEndIndex := strings.Index(pageContent, "</body>")
+		if bodyEndIndex != -1 {
+			pageBody = string([]byte(pageContent[bodyStartIndex:bodyEndIndex]))
+		}
+	}
+
+	return pageTitle, len(pageContent), matchWord, len(pageBody)
 }
 
 func lineCounter(r io.Reader) int {
@@ -381,10 +393,10 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 	// create output string variable
 	var outputString string
 	if checkStatus(strconv.Itoa(resp.StatusCode)) && checkContentType(resp.Header.Get("Content-Type")) {
-		title, length, matchWord := GetResponseDetails(resp)
+		title, length, matchWord, lengthBody := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
 			if filterWrongStatus200 == "true" {
-				if strings.Contains(title, "404") || strings.Contains(title, "Not Found") || strings.Contains(title, "Error") || strings.Contains(title, "403") || strings.Contains(title, "Forbidden") || strings.Contains(title, "500") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 0 {
+				if strings.Contains(title, "Access Gateway") || strings.Contains(title, "Not Found") || strings.Contains(title, "ERROR") || strings.Contains(title, "Error") || strings.Contains(title, "Forbidden") || strings.Contains(title, "Bad Request") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 1 || lengthBody <= 1 {
 					return
 				}
 			}
