@@ -95,6 +95,7 @@ General
     - [ ] load config 
     - [ ] save config
     - [ ] yaml file 
+    - [ ] config for "dont show" in title/body
 - [ ] Proxy
 - [ ] throttle
 - [ ] detect "too many requests" 
@@ -162,7 +163,8 @@ Response Analysis
 - [ ] Show possible block response, after x requests "403 or too many request" 
 - [ ] Show possible false 200, same length of startsite...
 - [ ] Intilligence
-   - [ ] Automatically detect false 200 (really 404) or too many rediretcs and then restart again, with the exclusion of
+   - [x] Automatically detect false 200 (really 404) 
+   - [ ] too many rediretcs and then restart again, with the exclusion of
    - [ ] Show the most unique target 
 - [x] Show titel of Page
 - [x] Show Response Body Length
