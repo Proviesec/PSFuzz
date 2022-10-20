@@ -393,10 +393,10 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 	// create output string variable
 	var outputString string
 	if checkStatus(strconv.Itoa(resp.StatusCode)) && checkContentType(resp.Header.Get("Content-Type")) {
-		title, length, matchWord, lengthBody := GetResponseDetails(resp)
+		title, length, matchWord, _ := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
 			if filterWrongStatus200 == "true" {
-				if strings.Contains(title, "Access Gateway") || strings.Contains(title, "Not Found") || strings.Contains(title, "ERROR") || strings.Contains(title, "Error") || strings.Contains(title, "Forbidden") || strings.Contains(title, "Bad Request") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 1 || lengthBody <= 1 {
+				if strings.Contains(title, "Access Gateway") || strings.Contains(title, "Not Found") || strings.Contains(title, "ERROR") || strings.Contains(title, "Error") || strings.Contains(title, "Forbidden") || strings.Contains(title, "Bad Request") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 1 {
 					return
 				}
 			}
