@@ -147,6 +147,7 @@ Attack
 - [ ] open redirect scan
 - [ ] fuzzing parameter (from a-z)
 - [ ] fuzzing http verbs
+- [ ] Wordlist formats, upper lower 
 
 Response Analysis
 - [x] show response status 
