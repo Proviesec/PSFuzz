@@ -36,7 +36,9 @@ var generate_payload string
 var generate_payload_length int
 var showStatus string
 var redirect string
+var recursionLevel int
 var bypass string
+var bypassTooManyRequests string
 var concurrency int
 var output string
 var onlydomains string
@@ -80,9 +82,17 @@ func init() {
 	flag.StringVar(&redirect, "redirect", "true", "redirect")
 	flag.StringVar(&redirect, "r", "true", "redirect")
 
+	// get recursionLevel parameter from the command line
+	flag.IntVar(&recursionLevel, "recursionLevel", 0, "recursionLevel")
+	flag.IntVar(&recursionLevel, "rl", 0, "recursionLevel")
+
 	// get bypass parameter from the command line
 	flag.StringVar(&bypass, "bypass", "false", "bypass")
 	flag.StringVar(&bypass, "b", "false", "bypass")
+
+	// get bypassTooManyRequests parameter from the command line
+	flag.StringVar(&bypassTooManyRequests, "bypassTooManyRequests", "false", "bypassTooManyRequests")
+	flag.StringVar(&bypassTooManyRequests, "btr", "false", "bypassTooManyRequests")
 
 	// get concurrency parameter from the command line
 	flag.IntVar(&concurrency, "concurrency", 1, "concurrency")
@@ -396,7 +406,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 		title, length, matchWord, _ := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
 			if filterWrongStatus200 == "true" {
-				if  strings.Contains(title,"Page Not Available") || strings.Contains(title, "Access Gateway") || strings.Contains(title, "Not Found") || strings.Contains(title, "ERROR") || strings.Contains(title, "Error") || strings.Contains(title, "Forbidden") || strings.Contains(title, "Bad Request") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 1 {
+				if strings.Contains(title, "Technical subdomain") || strings.Contains(title, "Page Not Available") || strings.Contains(title, "Access Gateway") || strings.Contains(title, "Not Found") || strings.Contains(title, "ERROR") || strings.Contains(title, "Error") || strings.Contains(title, "Forbidden") || strings.Contains(title, "Bad Request") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 1 {
 					return
 				}
 			}
@@ -433,6 +443,11 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 		}
 		if (resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized) && bypassResponse == "true" {
 			bypassStatusCode40x(url, showStatus, file_create)
+		}
+		// if the status code is 429 then wait 5 seconds and retry
+		if bypassTooManyRequests == "true" && resp.StatusCode == http.StatusTooManyRequests {
+			time.Sleep(5 * time.Second)
+			testUrl(url, showStatus, file_create, redirected, requestAddHeader, bypassResponse)
 		}
 	}
 	_, _ = file_create.WriteString(outputString)
