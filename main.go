@@ -328,7 +328,7 @@ func urlFuzzScanner(directoryList []string) {
 	defer file_create.Close()
 
 	if filterTestLength == "true" {
-		// test a ramdom string of length 100 to the url with the methid testUrl and get the length of the response
+		// test a ramdom request and get the length of the response
 		random_string := "213804asdad32432sdf"
 		url_test := ""
 		if strings.Contains(url, "#PSFUZZ#") {
