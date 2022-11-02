@@ -45,7 +45,9 @@ var onlydomains string
 var requestAddHeader string
 var requestAddAgent string
 var filterWrongStatus200 string
+var filterWrongSubdomain string
 var filterStatusCode string
+var filterTestLength string
 var filterContentType string
 var filterContentTypeList []string
 var filterMatchWord string
@@ -56,6 +58,8 @@ var filterLength string
 var filterLengthList []string
 var filterLengthNot string
 var filterLengthNotList []string
+var lengthcount = map[int]int{}
+var testlength int
 
 func init() {
 	// get url parameter from name "url" in the command line
@@ -73,6 +77,10 @@ func init() {
 	// get status parameter from the command lline
 	flag.StringVar(&showStatus, "showStatus", "false", "show status")
 	flag.StringVar(&showStatus, "s", "false", "show status")
+
+	// get testlength parameter from the command lline
+	flag.StringVar(&filterTestLength, "filterTestLength", "false", "filterTestLength")
+	flag.StringVar(&filterTestLength, "t", "false", "filterTestLength")
 
 	// get onlydomains parameter from the command lline
 	flag.StringVar(&onlydomains, "onlydomains", "false", "only domains")
@@ -105,6 +113,10 @@ func init() {
 	// get filterWrongStatus200 parameter from the command line
 	flag.StringVar(&filterWrongStatus200, "filterWrongStatus200", "false", "filterWrongStatus200")
 	flag.StringVar(&filterWrongStatus200, "fws", "false", "filterWrongStatus200")
+
+	//get filterWrongSubdomain parameter from the command line
+	flag.StringVar(&filterWrongSubdomain, "filterWrongSubdomain", "false", "filterWrongSubdomain")
+	flag.StringVar(&filterWrongSubdomain, "fwd", "false", "filterWrongSubdomain")
 
 	// get filterContentType parameter from the command line
 	flag.StringVar(&filterContentType, "filterContentType", "", "filterContentType")
@@ -315,6 +327,19 @@ func urlFuzzScanner(directoryList []string) {
 	}
 	defer file_create.Close()
 
+	if filterTestLength == "true" {
+		// test a ramdom string of length 100 to the url with the methid testUrl and get the length of the response
+		random_string := "213804asdad32432sdf"
+		url_test := ""
+		if strings.Contains(url, "#PSFUZZ#") {
+			url_test = strings.Replace(url, "#PSFUZZ#", random_string, 1)
+		} else {
+			url_test = url + random_string
+		}
+		resp_test := sendRequest(url_test, "")
+		_, testlength, _, _ = GetResponseDetails(resp_test)
+	}
+
 	for scanner.Scan() {
 		percent := (count * 100 / count_lines)
 		fill := strings.Repeat("x", percent) + strings.Repeat("-", 100-percent)
@@ -331,6 +356,7 @@ func urlFuzzScanner(directoryList []string) {
 
 		concurrent <- 1
 		count++
+
 		go func(count int, url string, showStatus string) {
 			// find the wildcard in the url
 			if strings.Contains(url, "#PSFUZZ#") {
@@ -346,7 +372,7 @@ func urlFuzzScanner(directoryList []string) {
 	return
 }
 
-func testUrl(url string, showStatus string, file_create *os.File, redirected bool, requestHeader string, bypassResponse string) {
+func sendRequest(url string, requestHeader string) *http.Response {
 
 	if requestHeader != "" {
 		requestHeader = requestAddHeader
@@ -361,7 +387,7 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
-		return
+		return nil
 	}
 	// set the user agent
 	if requestAddAgent != "" {
@@ -389,8 +415,13 @@ func testUrl(url string, showStatus string, file_create *os.File, redirected boo
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
-		return
+		return nil
 	}
+	return resp
+}
+
+func testUrl(url string, showStatus string, file_create *os.File, redirected bool, requestHeader string, bypassResponse string) {
+	resp := sendRequest(url, requestHeader)
 
 	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
@@ -405,8 +436,24 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 	if checkStatus(strconv.Itoa(resp.StatusCode)) && checkContentType(resp.Header.Get("Content-Type")) {
 		title, length, matchWord, _ := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
+
+			// save the length of the response
+			mutex.Lock()
+			lengthcount[length] = lengthcount[length] + 1
+			mutex.Unlock()
+
 			if filterWrongStatus200 == "true" {
 				if strings.Contains(title, "Technical subdomain") || strings.Contains(title, "Page Not Available") || strings.Contains(title, "Access Gateway") || strings.Contains(title, "Not Found") || strings.Contains(title, "ERROR") || strings.Contains(title, "Error") || strings.Contains(title, "Forbidden") || strings.Contains(title, "Bad Request") || strings.Contains(title, "Internal Server Error") || strings.Contains(title, "Bad Gateway") || length <= 1 {
+					return
+				}
+			}
+			if filterWrongSubdomain == "true" {
+				if length == 21 || length == 180 || strings.Contains(title, "Origin DNS error") || resp.StatusCode == http.StatusPermanentRedirect {
+					return
+				}
+			}
+			if filterTestLength == "true" {
+				if length == testlength {
 					return
 				}
 			}
@@ -552,4 +599,5 @@ func main() {
 	urlFuzzScanner(directoryList)
 	fmt.Fprint(os.Stdout, "\n")
 	fmt.Println(statuscount) // map[string]int
+	fmt.Println(lengthcount)
 }
