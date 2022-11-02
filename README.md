@@ -62,6 +62,7 @@ Options
 * `-b`/`-bypass` Example: `-b true` -> bypass status code: 401,402,403
 * `-g`/`-generate_payload` Example: `-g 100` -> generate a,aa,ab,abc,aaa,abb,bbc
 * `-od` /`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
+* `-t` /`-` Example: `-t true` make a test request and check if any other request has the same length, if yes, then skip the result for this request
 * `fws` / `filterWrongStatus200` Example: `-fws true` - Don´t show: in title: "Access Gateway", "Not Found", "Error"/"ERROR", "403", "Bad Request" ,"Forbidden", "500", "Internal Server Error" and body length <= 1
 
 
@@ -162,7 +163,7 @@ Response Analysis
     - [ ] output the match line 
 - [x] Show positiv false: status 200, but title 404
 - [ ] Show possible block response, after x requests "403 or too many request" 
-- [ ] Show possible false 200, same length of startsite...
+- [x] Show possible false 200, same length of a random site
 - [ ] Intilligence
    - [x] Automatically detect false 200 (really 404) 
    - [ ] too many rediretcs and then restart again, with the exclusion of
