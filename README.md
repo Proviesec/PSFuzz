@@ -62,7 +62,7 @@ Options
 * `-b`/`-bypass` Example: `-b true` -> bypass status code: 401,402,403
 * `-g`/`-generate_payload` Example: `-g 100` -> generate a,aa,ab,abc,aaa,abb,bbc
 * `-od` /`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
-* `-t` /`-` Example: `-t true` make a test request and check if any other request has the same length, if yes, then skip the result for this request
+* `-t` /`-filterTestLength` Example: `-t true` make a test request and check if any other request has the same length, if yes, then skip the result for this request
 * `fws` / `filterWrongStatus200` Example: `-fws true` - Don´t show: in title: "Access Gateway", "Not Found", "Error"/"ERROR", "403", "Bad Request" ,"Forbidden", "500", "Internal Server Error" and body length <= 1
 
 
