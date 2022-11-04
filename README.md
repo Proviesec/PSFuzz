@@ -121,6 +121,8 @@ General
     - [x] Filter content type 
     - [x] Words match list title/page
     - [x] Set Optional Header
+    - [ ] Min response-size
+    - [ ] Max response-size
     - [ ] Set request Timeout
     - [ ] Add Cookies
     - [ ] quite Mode 
