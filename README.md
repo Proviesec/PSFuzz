@@ -121,6 +121,8 @@ General
     - [x] Filter content type 
     - [x] Words match list title/page
     - [x] Set Optional Header
+    - [ ] scan subdirs (list: admin/public/static)
+    - [ ] exclude subdirs (list: js/img)
     - [ ] Min response-size
     - [ ] Max response-size
     - [ ] Set request Timeout
