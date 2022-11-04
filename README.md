@@ -179,7 +179,7 @@ Response Analysis
 - [ ] fuzz Parameter check (normal Response vs. with paramter)
 - [ ] show reflected cookie 
 - [ ] show reflected params
-- [ ] show reflected base64
+- [ ] show reflected base64 params
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
