@@ -69,7 +69,6 @@ Options
 
 # Attack Configuration / Patterns
 
-
 # Response Analysis 
 
 # Example
