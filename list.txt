@@ -19,3 +19,4 @@ git
 docker
 monitoring
 api
+ws_ftp.ini
