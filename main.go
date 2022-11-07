@@ -56,6 +56,8 @@ var filterStatusNot string
 var filterStatusNotList []string
 var filterLength string
 var filterLengthList []string
+var filterMaxLength int
+var filterMinLength int
 var filterLengthNot string
 var filterLengthNotList []string
 var lengthcount = map[int]int{}
@@ -141,6 +143,14 @@ func init() {
 	// get not show length from the command line
 	flag.StringVar(&filterLengthNot, "filterLengthNot", "-1", "Don´t show this response length")
 	flag.StringVar(&filterLengthNot, "fln", "-1", "Don´t show this response length")
+
+	// get filterMaxLength from the command line
+	flag.IntVar(&filterMaxLength, "filterMaxLength", -1, "Show only response length less than")
+	flag.IntVar(&filterMaxLength, "fml", -1, "Show only response length less than")
+
+	// get filterMinLength from the command line
+	flag.IntVar(&filterMinLength, "filterMinLength", -1, "Show only response length greater than")
+	flag.IntVar(&filterMinLength, "fmg", -1, "Show only response length greater than")
 
 	// get add header from the command line
 	flag.StringVar(&requestAddHeader, "requestAddHeader", "", "Add header to request")
@@ -328,7 +338,7 @@ func urlFuzzScanner(directoryList []string) {
 	defer file_create.Close()
 
 	if filterTestLength == "true" {
-		// test a ramdom request and get the length of the response
+
 		random_string := "213804asdad32432sdf"
 		url_test := ""
 		if strings.Contains(url, "#PSFUZZ#") {
@@ -504,14 +514,17 @@ func bypassStatusCode40x(url string, showStatus string, file_create *os.File) {
 
 	arrayPath := [13]string{"/*", "//.", "/%2e/", "/%2f/", "/./", "/", "/*/", "/..;/", "/..%3B/", "////", "/%20", "%00", "#test"}
 	for _, element := range arrayPath {
+		time.Sleep(time.Second)
 		testUrl(url+element, showStatus, file_create, false, "", "false")
 	}
 	arrayExtensions := [10]string{".yml", ".php", ".html", ".zip", ".txt", ".yaml", ".wadl", ".htm", ".asp", ".aspx"}
 	for _, element := range arrayExtensions {
+		time.Sleep(time.Second)
 		testUrl(url+element, showStatus, file_create, false, "", "false")
 	}
 	arrayHeader := [6]string{"X-Custom-IP-Authorization127.0.0.1", "Host:Localhost", "X-Forwarded-For:127.0.0.1:80", "X-Forwarded-For:http://127.0.0.1", "X-Custom-IP-Authorization:127.0.0.1", "Content-Length:0"}
 	for _, element := range arrayHeader {
+		time.Sleep(time.Second)
 		testUrl(url, showStatus, file_create, false, element, "false")
 	}
 }
@@ -552,6 +565,21 @@ func checkStatus(s string) bool {
 }
 
 func checkLength(s string) bool {
+	// if filterMaxLength is bigger than 0 then check if the length is smaller than the filterMaxLength
+	if filterMaxLength > 0 {
+		// convert the string to int
+		i, _ := strconv.Atoi(s)
+		if i > filterMaxLength {
+			return false
+		}
+	}
+	// if filterMinLength is bigger than 0 then check if the length is bigger than the filterMinLength
+	if filterMinLength > 0 {
+		i, _ := strconv.Atoi(s)
+		if filterMinLength > i {
+			return false
+		}
+	}
 	for _, v := range filterLengthNotList {
 		// check if in v is the string "-" Example 10-200 and compare the two numbers
 		if strings.Contains(v, "-") {
