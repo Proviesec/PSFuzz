@@ -29,6 +29,7 @@ var mutex = &sync.Mutex{}
 var statuscount = map[string]int{}
 
 var default_payload_url = "https://raw.githubusercontent.com/Proviesec/directory-payload-list/main/directory-full-list.txt"
+var fav_payload_url = "https://raw.githubusercontent.com/Proviesec/directory-files-payload-lists/main/directory-proviesec-favorite-list.txt"
 
 var url string
 var dirlist string
@@ -270,8 +271,16 @@ func NextAlias(last string) string {
 
 func urlFuzzScanner(directoryList []string) {
 	// open the text file directoryList and read the lines in it
-	if directoryList[0] == "default" {
-		dir_resp, err := http.Get(default_payload_url)
+	// if directoryList is default or fav then use one of the default lists
+	if directoryList[0] == "default" || directoryList[0] == "fav" {
+
+		directoryListUrl := default_payload_url
+		if directoryList[0] == "fav" {
+			directoryListUrl = fav_payload_url
+		}
+
+		dir_resp, err := http.Get(directoryListUrl)
+
 		if err != nil {
 			log.Fatal(err)
 		}
