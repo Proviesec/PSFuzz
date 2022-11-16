@@ -122,6 +122,7 @@ General
     - [x] Set Optional Header
     - [ ] scan subdirs (list: admin/public/static)
     - [ ] exclude subdirs (list: js/img)
+    - [ ] add default-extensions (yml,php,aspx,jsp,html,js)
     - [ ] Min response-size
     - [ ] Max response-size
     - [ ] Set request Timeout
