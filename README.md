@@ -91,6 +91,7 @@ General
 - [x] Logo and Version output
 - [ ] Tryhackme room
 - [ ] help mode ( -h )
+- [x] check backslah
 - [ ] optional config file
     - [ ] load config 
     - [ ] save config
