@@ -45,6 +45,7 @@ var output string
 var onlydomains string
 var requestAddHeader string
 var requestAddAgent string
+var checkBackslash string
 var filterWrongStatus200 string
 var filterWrongSubdomain string
 var filterStatusCode string
@@ -63,8 +64,14 @@ var filterLengthNot string
 var filterLengthNotList []string
 var lengthcount = map[int]int{}
 var testlength int
+var configfile string
 
 func init() {
+
+	// get config file from the command line
+	flag.StringVar(&configfile, "configfile", "", "Config file")
+	flag.StringVar(&configfile, "cf", "", "Config file")
+
 	// get url parameter from name "url" in the command line
 	flag.StringVar(&url, "url", "", "URL")
 	flag.StringVar(&url, "u", "", "URL")
@@ -100,6 +107,10 @@ func init() {
 	// get bypass parameter from the command line
 	flag.StringVar(&bypass, "bypass", "false", "bypass")
 	flag.StringVar(&bypass, "b", "false", "bypass")
+
+	// get checkBackslash parameter from the command line
+	flag.StringVar(&checkBackslash, "checkBackslash", "false", "checkBackslash")
+	flag.StringVar(&checkBackslash, "cb", "false", "checkBackslash")
 
 	// get bypassTooManyRequests parameter from the command line
 	flag.StringVar(&bypassTooManyRequests, "bypassTooManyRequests", "false", "bypassTooManyRequests")
@@ -178,6 +189,10 @@ func init() {
 	// If the identified URL has neither http or https infront of it. Create both and scan them.
 	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
 		url = "https://" + url
+	}
+	// if the URL does not end with a /, add it.
+	if !strings.HasSuffix(url, "/") && checkBackslash != "true" {
+		url = url + "/"
 	}
 }
 
