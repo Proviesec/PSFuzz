@@ -513,13 +513,14 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 			}
 			if onlydomains == "true" {
 				// if url string start with http:// or https:// then remove it
-				if strings.HasPrefix(url, "http://") {
-					url = strings.Replace(url, "http://", "", 1)
+				url_string := url
+				if strings.HasPrefix(url_string, "http://") {
+					url_string = strings.Replace(url_string, "http://", "", 1)
 				}
-				if strings.HasPrefix(url, "https://") {
-					url = strings.Replace(url, "https://", "", 1)
+				if strings.HasPrefix(url_string, "https://") {
+					url_string = strings.Replace(url_string, "https://", "", 1)
 				}
-				outputString = url + "\n"
+				outputString = url_string + "\n"
 			}
 		}
 		if (resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized) && bypassResponse == "true" {
