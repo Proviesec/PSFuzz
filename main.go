@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -46,6 +45,7 @@ var onlydomains string
 var requestAddHeader string
 var requestAddAgent string
 var checkBackslash string
+var helpmode string
 var filterWrongStatus200 string
 var filterWrongSubdomain string
 var filterStatusCode string
@@ -123,6 +123,10 @@ func init() {
 	// get output parameter from the command line
 	flag.StringVar(&output, "output", "", "output")
 	flag.StringVar(&output, "o", "", "output")
+
+	// get helpmode parameter from the command line
+	flag.StringVar(&helpmode, "helpmode", "false", "helpmode")
+	flag.StringVar(&helpmode, "h", "false", "helpmode")
 
 	// get filterWrongStatus200 parameter from the command line
 	flag.StringVar(&filterWrongStatus200, "filterWrongStatus200", "false", "filterWrongStatus200")
@@ -210,6 +214,7 @@ func GetResponseDetails(response *http.Response) (string, int, string, int) {
 	// Get the response body as a string
 	dataInBytes, _ := ioutil.ReadAll(response.Body)
 	pageContent := string(dataInBytes)
+
 	pageTitle := ""
 	pageBody := ""
 	// Find a substr
@@ -256,24 +261,17 @@ func GetResponseDetails(response *http.Response) (string, int, string, int) {
 	return pageTitle, len(pageContent), matchWord, len(pageBody)
 }
 
-func lineCounter(r io.Reader) int {
-	buf := make([]byte, 32*1024)
+func lineCounter(r io.Reader) (int, error) {
 	count := 0
-	lineSep := []byte{'\n'}
+	scanner := bufio.NewScanner(r)
 
-	for {
-		c, err := r.Read(buf)
-		count += bytes.Count(buf[:c], lineSep)
-
-		switch {
-		case err == io.EOF:
-			return count
-
-		case err != nil:
-			return count
-		}
+	for scanner.Scan() {
+		count++
 	}
+
+	return count, scanner.Err()
 }
+
 func NextAlias(last string) string {
 	if last == "" {
 		return "a"
@@ -339,7 +337,7 @@ func urlFuzzScanner(directoryList []string) {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
 	}
 	defer file_lines.Close()
-	count_lines := lineCounter(file_lines)
+	count_lines, _ := lineCounter(file_lines)
 	if concurrency <= 0 {
 		concurrency = MAX_CONCURRENT_JOBS
 	}
