@@ -272,6 +272,31 @@ func lineCounter(r io.Reader) (int, error) {
 	return count, scanner.Err()
 }
 
+func createPayload(length int) []byte {
+
+  // Create a byte slice of the specified length
+
+  payload := make([]byte, length)
+
+  
+
+  // Fill the slice with the sequence of characters "a", "b", "c", etc.
+
+  for i := 0; i < length; i++ {
+
+    payload[i] = byte('a' + (i % 26))
+
+  }
+
+  
+
+  // Return the payload
+
+  return payload
+
+}
+
+
 func NextAlias(last string) string {
 	if last == "" {
 		return "a"
