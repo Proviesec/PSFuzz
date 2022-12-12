@@ -178,6 +178,7 @@ Response Analysis
    - [ ] Show the most unique target 
 - [x] Show titel of Page
 - [x] Show Response Body Length
+- [x] filter possibile 404
 - [ ] show content type 
 - [ ] Fingerprint check 
 - [ ] fuzz Parameter check (normal Response vs. with paramter)
