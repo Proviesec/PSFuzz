@@ -50,6 +50,7 @@ var filterWrongStatus200 string
 var filterWrongSubdomain string
 var filterStatusCode string
 var filterTestLength string
+var filterPossible404 string
 var filterContentType string
 var filterContentTypeList []string
 var filterMatchWord string
@@ -91,6 +92,10 @@ func init() {
 	// get testlength parameter from the command lline
 	flag.StringVar(&filterTestLength, "filterTestLength", "false", "filterTestLength")
 	flag.StringVar(&filterTestLength, "t", "false", "filterTestLength")
+
+	// get filterpossible404 parameter from the command lline
+	flag.StringVar(&filterPossible404, "filterPossible404", "false", "filterPossible404")
+	flag.StringVar(&filterPossible404, "p404", "false", "filterPossible404")
 
 	// get onlydomains parameter from the command lline
 	flag.StringVar(&onlydomains, "onlydomains", "false", "only domains")
@@ -274,28 +279,23 @@ func lineCounter(r io.Reader) (int, error) {
 
 func createPayload(length int) []byte {
 
-  // Create a byte slice of the specified length
+	// Create a byte slice of the specified length
 
-  payload := make([]byte, length)
+	payload := make([]byte, length)
 
-  
+	// Fill the slice with the sequence of characters "a", "b", "c", etc.
 
-  // Fill the slice with the sequence of characters "a", "b", "c", etc.
+	for i := 0; i < length; i++ {
 
-  for i := 0; i < length; i++ {
+		payload[i] = byte('a' + (i % 26))
 
-    payload[i] = byte('a' + (i % 26))
+	}
 
-  }
+	// Return the payload
 
-  
-
-  // Return the payload
-
-  return payload
+	return payload
 
 }
-
 
 func NextAlias(last string) string {
 	if last == "" {
@@ -515,6 +515,9 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 				}
 			}
 			if strings.Contains(title, "404") {
+				if filterPossible404 == "true" {
+					return
+				}
 				title = title + " -- possibile a 404"
 			}
 			if filterMatchWord != "" && matchWord != "" {
