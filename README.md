@@ -123,7 +123,7 @@ General
     - [x] Words match list title/page
     - [x] Set Optional Header
     - [ ] scan subdirs (list: admin/public/static)
-    - [ ] exclude subdirs (list: js/img)
+    - [b] exclude subdirs (list: js/img)
     - [ ] add default-extensions (yml,php,aspx,jsp,html,js)
     - [ ] lowercase
     - [ ] uppercase
