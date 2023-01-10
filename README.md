@@ -162,7 +162,7 @@ Response Analysis
 - [x] show response status 
 - [ ] show possibile parameter
 - [ ] dump the response in files 
-- [ ] Fingerprint Software (Wordpress/Apache/nginx etc.)
+- [ ] Fingerprint Software (Wordpress/php/java/Apache/nginx etc.)
 - [ ] CORS analyse
 - [ ] bypass
     - [ ] 403 Bypass, config 
