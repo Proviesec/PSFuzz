@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -67,7 +68,31 @@ var lengthcount = map[int]int{}
 var testlength int
 var configfile string
 
+type Config struct {
+	URL                   string `json:"url"`
+	Dirlist               string `json:"dirlist"`
+	GeneratePayload       bool   `json:"generate_payload"`
+	ShowStatus            bool   `json:"showStatus"`
+	FilterTestLength      bool   `json:"filterTestLength"`
+	FilterPossible404     bool   `json:"filterPossible404"`
+	OnlyDomains           bool   `json:"onlydomains"`
+	Redirect              bool   `json:"redirect"`
+	RecursionLevel        int    `json:"recursionLevel"`
+	Bypass                bool   `json:"bypass"`
+	CheckBackslash        bool   `json:"checkBackslash"`
+	BypassTooManyRequests bool   `json:"bypassTooManyRequests"`
+	Concurrency           int    `json:"concurrency"`
+	Output                string `json:"output"`
+	Helpmode              bool   `json:"helpmode"`
+	FilterWrongStatus200  bool   `json:"filterWrongStatus200"`
+	FilterWrongSubdomain  bool   `json:"filterWrongSubdomain"`
+}
+
 func init() {
+	_, err := loadConfig("config.json")
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	// get config file from the command line
 	flag.StringVar(&configfile, "configfile", "", "Config file")
@@ -278,16 +303,23 @@ func lineCounter(r io.Reader) (int, error) {
 }
 
 func createPayload(length int) []byte {
+
 	// Create a byte slice of the specified length
+
 	payload := make([]byte, length)
 
 	// Fill the slice with the sequence of characters "a", "b", "c", etc.
+
 	for i := 0; i < length; i++ {
+
 		payload[i] = byte('a' + (i % 26))
+
 	}
+
 	// Return the payload
 
 	return payload
+
 }
 
 func NextAlias(last string) string {
@@ -606,6 +638,18 @@ func checkStatus(s string) bool {
 		}
 	}
 	return false
+}
+
+func loadConfig(file string) (*Config, error) {
+	var config Config
+	configFile, err := os.Open(file)
+	defer configFile.Close()
+	if err != nil {
+		return nil, err
+	}
+	jsonParser := json.NewDecoder(configFile)
+	err = jsonParser.Decode(&config)
+	return &config, err
 }
 
 func checkLength(s string) bool {
