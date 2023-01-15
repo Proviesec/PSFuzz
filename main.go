@@ -89,10 +89,6 @@ type Config struct {
 }
 
 func init() {
-	_, err := loadConfig("config.json")
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	// get config file from the command line
 	flag.StringVar(&configfile, "configfile", "", "Config file")
@@ -207,6 +203,15 @@ func init() {
 	flag.StringVar(&requestAddAgent, "raa", "", "Add agent to request")
 
 	flag.Parse()
+
+	config, err := loadConfig("config.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if url == "" {
+		url = config.URL
+	}
 
 	filterStatusCodeList = strings.Split(filterStatusCode, ",")
 	filterStatusNotList = strings.Split(filterStatusNot, ",")
