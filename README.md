@@ -94,9 +94,9 @@ General
 - [ ] help mode (-h)
 - [x] check backslah
 - [ ] optional config file
-    - [ ] load config 
+    - [x] load config 
     - [ ] save config
-    - [ ] yaml file 
+    - [ ] json file 
     - [ ] config for "dont show" in title/body
 - [ ] Proxy
 - [ ] throttle
