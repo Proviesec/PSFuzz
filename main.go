@@ -213,6 +213,12 @@ func init() {
 		url = config.URL
 	}
 
+	if dirlist == "default" {
+		if config.Dirlist == "" {
+			dirlist = config.Dirlist
+		}
+	}
+
 	filterStatusCodeList = strings.Split(filterStatusCode, ",")
 	filterStatusNotList = strings.Split(filterStatusNot, ",")
 	filterContentTypeList = strings.Split(filterContentType, ",")
