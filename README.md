@@ -36,6 +36,7 @@ Needless to mention, please use this tool very very carefully. The authors won't
 # Installation & Usage
 
 ```go get https://github.com/Proviesec/PSFuzz```
+```go install github.com/Proviesec/PSFuzz@latest```
 
 Wordlists
 ---------------
