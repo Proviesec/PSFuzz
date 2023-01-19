@@ -97,7 +97,7 @@ General
 - [ ] optional config file
     - [x] load config 
     - [ ] save config
-    - [ ] json file 
+    - [x] json file 
     - [ ] config for "dont show" in title/body
 - [ ] Proxy
 - [ ] throttle
