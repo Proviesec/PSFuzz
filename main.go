@@ -429,7 +429,12 @@ func urlFuzzScanner(directoryList []string) {
 		} else {
 			url_test = url + random_string
 		}
-		resp_test := sendRequest(url_test, "")
+		resp_test, err := sendRequest(url_test, "")
+		if err != nil {
+			// Handle the error here and continue the execution of the program
+			fmt.Println("Error occurred while sending request:", err)
+			return
+		}
 		_, testlength, _, _ = GetResponseDetails(resp_test)
 	}
 
@@ -465,7 +470,7 @@ func urlFuzzScanner(directoryList []string) {
 	return
 }
 
-func sendRequest(url string, requestHeader string) *http.Response {
+func sendRequest(url string, requestHeader string) (*http.Response, error) {
 
 	if requestHeader != "" {
 		requestHeader = requestAddHeader
@@ -480,7 +485,7 @@ func sendRequest(url string, requestHeader string) *http.Response {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
-		return nil
+		return nil, err
 	}
 	// set the user agent
 	if requestAddAgent != "" {
@@ -508,13 +513,19 @@ func sendRequest(url string, requestHeader string) *http.Response {
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
 		fmt.Fprint(os.Stdout, "\r"+err.Error()+strings.Repeat(" ", 100)+"\n")
-		return nil
+		return nil, err
 	}
-	return resp
+	return resp, nil
 }
 
 func testUrl(url string, showStatus string, file_create *os.File, redirected bool, requestHeader string, bypassResponse string) {
-	resp := sendRequest(url, requestHeader)
+	resp, err := sendRequest(url, requestHeader)
+
+	if err != nil {
+		// Handle the error here and continue the execution of the program
+		fmt.Println("Error occurred while sending request:", err)
+		return
+	}
 
 	mutex.Lock()
 	statuscount[resp.Status] = statuscount[resp.Status] + 1
