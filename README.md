@@ -124,7 +124,7 @@ General
     - [x] Words match list title/page
     - [x] Set Optional Header
     - [ ] scan subdirs (list: admin/public/static)
-    - [b] exclude subdirs (list: js/img)
+    - [ ] exclude subdirs (list: js/img)
     - [ ] add default-extensions (yml,php,aspx,jsp,html,js)
     - [ ] lowercase
     - [ ] uppercase
@@ -166,13 +166,14 @@ Response Analysis
 - [ ] Fingerprint Software (Wordpress/php/java/Apache/nginx etc.)
 - [ ] CORS analyse
 - [ ] bypass
-    - [ ] 403 Bypass, config 
+    - [x] 403 Bypass, config 
     - [ ] Status bypass
 - [ ] Words match list title/page/header 
     - [ ] output the match line 
 - [x] Show positiv false: status 200, but title 404
 - [ ] Show possible block response, after x requests "403 or too many request" 
 - [x] Show possible false 200, same length of a random site
+- [x] Show confident value, if the folder/file not in the response
 - [ ] Intilligence
    - [x] Automatically detect false 200 (really 404) 
    - [ ] too many rediretcs and then restart again, with the exclusion of
