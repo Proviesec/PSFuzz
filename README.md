@@ -189,6 +189,7 @@ Response Analysis
 - [ ] show reflected cookie 
 - [ ] show reflected params
 - [ ] show reflected base64 params
+- [ ] search for interesting strings
 - [ ] compare two scans 
     - [ ] save scan
     - [ ] load scan
