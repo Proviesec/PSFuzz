@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -251,7 +252,7 @@ func contains(s []string, str string) bool {
 	return false
 }
 
-func GetResponseDetails(response *http.Response) (string, int, string, int) {
+func GetResponseDetails(response *http.Response) (string, int, string, int, int) {
 	// Get the response body as a string
 	dataInBytes, _ := ioutil.ReadAll(response.Body)
 	pageContent := string(dataInBytes)
@@ -298,8 +299,13 @@ func GetResponseDetails(response *http.Response) (string, int, string, int) {
 			pageBody = string([]byte(pageContent[bodyStartIndex:bodyEndIndex]))
 		}
 	}
+	// Match non-space character sequences.
+	re := regexp.MustCompile(`[\S]+`)
 
-	return pageTitle, len(pageContent), matchWord, len(pageBody)
+	// Find all matches and return count.
+	resultsCount := re.FindAllString(pageContent, -1)
+
+	return pageTitle, len(pageContent), matchWord, len(resultsCount), len(pageBody)
 }
 
 func lineCounter(r io.Reader) (int, error) {
@@ -435,7 +441,7 @@ func urlFuzzScanner(directoryList []string) {
 			fmt.Println("Error occurred while sending request:", err)
 			return
 		}
-		_, testlength, _, _ = GetResponseDetails(resp_test)
+		_, testlength, _, _, _ = GetResponseDetails(resp_test)
 	}
 
 	for scanner.Scan() {
@@ -538,7 +544,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 	// create output string variable
 	var outputString string
 	if checkStatus(strconv.Itoa(resp.StatusCode)) && checkContentType(resp.Header.Get("Content-Type")) {
-		title, length, matchWord, _ := GetResponseDetails(resp)
+		title, length, matchWord, countWords, _ := GetResponseDetails(resp)
 		if ((filterMatchWord != "" && matchWord != "") || filterMatchWord == "") && ((contains(filterLengthList, strconv.Itoa(length)) || contains(filterLengthList, "-1")) && (!contains(filterLengthNotList, strconv.Itoa(length)) || contains(filterLengthNotList, "-1")) || checkLength(strconv.Itoa(length))) {
 
 			// save the length of the response
@@ -573,7 +579,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 			if redirected {
 				outputString = "redirected to "
 			}
-			outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " " + strconv.Itoa(length) + "\n"
+			outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " Length:" + strconv.Itoa(length) + " Words:" + strconv.Itoa(countWords) + "\n"
 
 			// convert resp.ContentLength to string
 			fmt.Fprint(os.Stdout, "\r"+outputString)
