@@ -162,7 +162,8 @@ Attack
 Response Analysis
 - [x] show response status 
 - [x] count words
-- [ ] show possibile parameter
+- [ ] show response time
+- [ ] show lines
 - [ ] dump the response in files 
 - [ ] Fingerprint Software (Wordpress/php/java/Apache/nginx etc.)
 - [ ] CORS analyse
