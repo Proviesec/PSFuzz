@@ -1,6 +1,6 @@
 ![PSFuzz](https://user-images.githubusercontent.com/6010786/176360134-adc6d195-60b0-4628-af06-b6b42afaffae.png)
 ![](https://us-central1-progress-markdown.cloudfunctions.net/progress/85)
-# PSFuzz - ProvieSec Fuzz Scanner - Web path discovery
+# PSFuzz - ProvieSec Fuzz Scanner - Web path/file discovery
 [![License](https://img.shields.io/badge/license-MIT-_red.svg)](https://opensource.org/licenses/MIT)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwisiswant0/go-dork/issues)
 [![Twitter](https://img.shields.io/twitter/follow/proviesec?label=Follow)](https://twitter.com/proviesec)
@@ -123,7 +123,7 @@ General
     - [x] Filter content type 
     - [x] Words match list title/page
     - [x] Set Optional Header
-    - [ ] scan subdirs (list: admin/public/static)
+    - [ ] scan subdirs with depth (list: admin/public/static)
     - [ ] exclude subdirs (list: js/img)
     - [ ] add default-extensions (yml,php,aspx,jsp,html,js)
     - [ ] lowercase
