@@ -44,7 +44,6 @@ Wordlists
   - the Wordlist is a text file, each line is a path.
   - Here you get suitable lists: https://github.com/Proviesec/directory-payload-list
 
-
 Options
 ---------------
 **Required**
@@ -66,7 +65,6 @@ Options
 * `-od` /`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
 * `-t` /`-filterTestLength` Example: `-t true` make a test request and check if any other request has the same length, if yes, then skip the result for this request
 * `fws` / `filterWrongStatus200` Example: `-fws true` - Don´t show: in title: "Access Gateway", "Not Found", "Error"/"ERROR", "403", "Bad Request" ,"Forbidden", "500", "Internal Server Error" and body length <= 1
-
 
 
 # Attack Configuration / Patterns
