@@ -512,8 +512,8 @@ func sendRequest(url string, requestHeader string) (*http.Response, error) {
 		}
 	}
 
-	// define the request with a timeout of 5 seconds
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// define the request with a timeout of 2 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	// make the request
 	resp, err := client.Do(req.WithContext(ctx))
