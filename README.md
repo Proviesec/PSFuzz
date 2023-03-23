@@ -138,6 +138,7 @@ General
 
 Attack
 - [x] make GET requests 
+- [ ] make put request 
 - [ ] make POST requests 
 - [ ] try PUT/DELETE/PATCH
 - [x] Wordlist txt parameter 
