@@ -85,7 +85,7 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
 # Todos
 
 
-General
+## General
 - [x] Multi requests
 - [x] Optional param output
 - [x] check https or http
@@ -137,7 +137,7 @@ General
     - [x] add user agent
     - [ ] username /password basic Auth 
 
-Attack
+## Attack
 - [x] make GET requests 
 - [ ] make put request 
 - [ ] make POST requests 
@@ -159,7 +159,7 @@ Attack
 - [ ] fuzzing http verbs
 - [ ] Wordlist formats, upper lower 
 
-Response Analysis
+## Response Analysis
 - [x] show response status 
 - [x] count words
 - [ ] show response time
