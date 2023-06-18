@@ -106,6 +106,7 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
     - [ ] CSV
     - [ ] Json
     - [ ] HTML
+- [ ] Send Mail?
 - [x] Progress bar
 - [ ] list of sites
 - [ ] Parameter
