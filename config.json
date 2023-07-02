@@ -1,5 +1,5 @@
 {
-    "url": "http://example.com",
+    "url": "https://example.com",
     "dirlist": "default",
     "generate_payload": true,
     "showStatus": false,
