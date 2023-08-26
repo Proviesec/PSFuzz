@@ -93,7 +93,7 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
 - [x] check https or http
 - [x] Logo and Version output
 - [ ] Tryhackme room - Link:
-- [ ] help mode (-h)
+- [x] help mode (-h)
 - [x] check backslah
 - [ ] optional config file
     - [x] load config 
