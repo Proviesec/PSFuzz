@@ -93,7 +93,9 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
 - [x] Optional param output
 - [x] check https or http
 - [x] Logo and Version output
-- [ ] Tryhackme room - Link:
+- [ ] Marketing
+    - [ ] Tryhackme room - Link:
+    - [ ] Youtube Video
 - [x] help mode (-h)
 - [x] check backslah
 - [ ] optional config file
