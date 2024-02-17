@@ -107,19 +107,19 @@ func init() {
 	flag.StringVar(&generate_payload, "generate_payload", "", "Generate Payload")
 	flag.StringVar(&generate_payload, "g", "", "Generate Payload")
 
-	// get status parameter from the command lline
+	// get status parameter from the command line
 	flag.StringVar(&showStatus, "showStatus", "false", "show status")
 	flag.StringVar(&showStatus, "s", "false", "show status")
 
-	// get testlength parameter from the command lline
+	// get testlength parameter from the command line
 	flag.StringVar(&filterTestLength, "filterTestLength", "false", "filterTestLength")
 	flag.StringVar(&filterTestLength, "t", "false", "filterTestLength")
 
-	// get filterpossible404 parameter from the command lline
+	// get filterpossible404 parameter from the command line
 	flag.StringVar(&filterPossible404, "filterPossible404", "false", "filterPossible404")
 	flag.StringVar(&filterPossible404, "p404", "false", "filterPossible404")
 
-	// get onlydomains parameter from the command lline
+	// get onlydomains parameter from the command line
 	flag.StringVar(&onlydomains, "onlydomains", "false", "only domains")
 	flag.StringVar(&onlydomains, "od", "false", "only domains")
 
@@ -320,19 +320,12 @@ func lineCounter(r io.Reader) (int, error) {
 }
 
 func createPayload(length int) []byte {
-
 	// Create a byte slice of the specified length
-
 	payload := make([]byte, length)
-
 	// Fill the slice with the sequence of characters "a", "b", "c", etc.
-
 	for i := 0; i < length; i++ {
-
 		payload[i] = byte('a' + (i % 26))
-
 	}
-
 	// Return the payload
 
 	return payload
@@ -549,7 +542,7 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 
 			// save the length of the response
 			mutex.Lock()
-			lengthcount[length] = lengthcount[length] + 1
+			lengthcount[length]++
 			mutex.Unlock()
 
 			if filterWrongStatus200 == "true" {
@@ -571,15 +564,15 @@ func responseAnalyse(resp *http.Response, url string, showStatus string, file_cr
 				if filterPossible404 == "true" {
 					return
 				}
-				title = title + " -- possibile a 404"
+				title += " -- possibile a 404"
 			}
 			if filterMatchWord != "" && matchWord != "" {
-				title = title + " -- MATCH: " + matchWord + " --"
+				title += " -- MATCH: " + matchWord + " --"
 			}
 			if redirected {
 				outputString = "redirected to "
 			}
-			outputString = outputString + url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " Length:" + strconv.Itoa(length) + " Words:" + strconv.Itoa(countWords) + "\n"
+			outputString += url + " - " + resp.Status + " " + strings.Repeat(" ", 100) + "\n" + title + " Length:" + strconv.Itoa(length) + " Words:" + strconv.Itoa(countWords) + "\n"
 
 			// convert resp.ContentLength to string
 			fmt.Fprint(os.Stdout, "\r"+outputString)
