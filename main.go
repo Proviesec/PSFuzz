@@ -89,8 +89,50 @@ type Config struct {
 	FilterWrongSubdomain  bool   `json:"filterWrongSubdomain"`
 }
 
-func init() {
+var throttleRate int
+var throttleTicker *time.Ticker
 
+var (
+	requestCount     int
+	startTime        time.Time
+	lastReportedRate int
+)
+
+func init() {
+	setupFlags()
+	loadConfigOverrides()
+
+	filterStatusCodeList = strings.Split(filterStatusCode, ",")
+	filterStatusNotList = strings.Split(filterStatusNot, ",")
+	filterContentTypeList = strings.Split(filterContentType, ",")
+	generate_payload_length, _ = strconv.Atoi(generate_payload)
+
+	if generate_payload_length < 0 || generate_payload_length > 20000 {
+		generate_payload_length = 20000
+	}
+
+	filterLengthList = strings.Split(filterLength, ",")
+	filterLengthNotList = strings.Split(filterLengthNot, ",")
+
+	// Initialize throttle ticker if throttleRate is set
+	if throttleRate > 0 {
+		throttleTicker = time.NewTicker(time.Second / time.Duration(throttleRate))
+	}
+
+	// If the identified URL has neither http or https infront of it. Create both and scan them.
+	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
+		url = "https://" + url
+	}
+	// if the URL does not end with a /, add it.
+	if !strings.HasSuffix(url, "/") && checkBackslash != "true" {
+		url = url + "/"
+	}
+	startTime = time.Now()
+	requestCount = 0
+	lastReportedRate = 0
+}
+
+func setupFlags() {
 	// get config file from the command line
 	flag.StringVar(&configfile, "configfile", "", "Config file")
 	flag.StringVar(&configfile, "cf", "", "Config file")
@@ -203,8 +245,14 @@ func init() {
 	flag.StringVar(&requestAddAgent, "requestAddAgent", "", "Add agent to request")
 	flag.StringVar(&requestAddAgent, "raa", "", "Add agent to request")
 
-	flag.Parse()
+	// get throttleRate from the command line
+	flag.IntVar(&throttleRate, "throttleRate", 0, "Throttle rate (requests per second)")
+	flag.IntVar(&throttleRate, "tr", 0, "Throttle rate (requests per second)")
 
+	flag.Parse()
+}
+
+func loadConfigOverrides() {
 	config, err := loadConfig("config.json")
 	if err != nil {
 		fmt.Println(err)
@@ -219,27 +267,27 @@ func init() {
 			dirlist = config.Dirlist
 		}
 	}
+}
 
-	filterStatusCodeList = strings.Split(filterStatusCode, ",")
-	filterStatusNotList = strings.Split(filterStatusNot, ",")
-	filterContentTypeList = strings.Split(filterContentType, ",")
-	generate_payload_length, _ = strconv.Atoi(generate_payload)
+func updateRequestRate() {
+	requestCount++
+	elapsed := time.Since(startTime).Seconds()
+	if elapsed > 0 {
+		currentRate := int(float64(requestCount) / elapsed)
 
-	if generate_payload_length < 0 || generate_payload_length > 20000 {
-		generate_payload_length = 20000
+		// Report the rate every 5 seconds or if it has significantly changed
+		if time.Now().Second()%1 == 0 && (lastReportedRate == 0 || abs(currentRate-lastReportedRate) > 10) {
+			fmt.Printf("\tAktuelle Anfragenrate: %d Anfragen pro Sekunde\n", currentRate)
+			lastReportedRate = currentRate
+		}
 	}
+}
 
-	filterLengthList = strings.Split(filterLength, ",")
-	filterLengthNotList = strings.Split(filterLengthNot, ",")
-
-	// If the identified URL has neither http or https infront of it. Create both and scan them.
-	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
-		url = "https://" + url
+func abs(x int) int {
+	if x < 0 {
+		return -x
 	}
-	// if the URL does not end with a /, add it.
-	if !strings.HasSuffix(url, "/") && checkBackslash != "true" {
-		url = url + "/"
-	}
+	return x
 }
 
 func contains(s []string, str string) bool {
@@ -470,7 +518,10 @@ func urlFuzzScanner(directoryList []string) {
 }
 
 func sendRequest(url string, requestHeader string) (*http.Response, error) {
-
+	// Throttle request if necessary
+	if throttleRate > 0 {
+		<-throttleTicker.C
+	}
 	if requestHeader != "" {
 		requestHeader = requestAddHeader
 	}
