@@ -60,6 +60,7 @@ Options
 * `-fln`/`-filterLengthNot` Example: `-fln 122,1234,1235,1236` or `-fln 122,1234-1236` Show not this response with this length (or length range)
 * `-fm`/`-filterMatchWord` Example: `-fm admin`
 * `-rah`/`-requestAddHeader` Example: `-rah Host:127.0.0.1`
+* `-tr`/`-throttleRate` Example: `-tr 10` -> max requests per second
 * `-b`/`-bypass` Example: `-b true` -> bypass status code: 401,402,403
 * `-g`/`-generate_payload` Example: `-g 100` -> generate a,aa,ab,abc,aaa,abb,bbc
 * `-od` /`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
