@@ -103,7 +103,7 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
     - [x] json file 
     - [ ] config for "dont show" in title/body
 - [ ] Proxy
-- [ ] throttle
+- [x] throttle
 - [x] detect "too many requests" 
 - [ ] Output
     - [x] TXT
