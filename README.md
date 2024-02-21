@@ -107,7 +107,7 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
 - [x] detect "too many requests" 
 - [ ] Output
     - [x] TXT
-    - [ ] CSV
+    - [x] CSV
     - [ ] Json
     - [ ] HTML
 - [ ] Send Mail?
