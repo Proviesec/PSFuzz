@@ -169,7 +169,8 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
 - [x] count words
 - [ ] show response time
 - [ ] show lines
-- [ ] dump the response in files 
+- [ ] dump the response in files
+- [ ] analyse the response with AI
 - [ ] Fingerprint Software (Wordpress/php/java/Apache/nginx etc.)
 - [ ] CORS analyse
 - [ ] bypass
