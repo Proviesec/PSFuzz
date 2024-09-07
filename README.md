@@ -5,6 +5,12 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwisiswant0/go-dork/issues)
 [![Twitter](https://img.shields.io/twitter/follow/proviesec?label=Follow)](https://twitter.com/proviesec)
 
+PSFuzz - ProvieSec Fuzz Scanner is a web path and file discovery tool designed to scan web directories, files, and other endpoints efficiently. It allows security professionals to explore potential vulnerabilities through fuzzing by sending a wide range of requests to various URLs, using both predefined and dynamically generated payloads.
+
+The tool supports custom configurations, such as recursive directory scanning, status code filtering, payload generation, request throttling, and more. PSFuzz is built with high concurrency to handle multiple requests in parallel while also allowing rate limiting.
+
+It includes several bypass techniques for common restrictions, and it is flexible enough to detect possible false positives, such as 404-like responses. The tool outputs findings to a file or directly to the console for further analysis.
+
 <a href="https://proviesec.org/">
     <img src="https://avatars.githubusercontent.com/u/92156402?s=400&u=7fe0dbb9085a37818ee8c2b061432a9a69cbff42&v=4" alt="Proviesec logo" title="Proviesec" align="right" height="60" />
 </a>
