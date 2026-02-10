@@ -100,12 +100,11 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
 - [x] Logo and Version output
 - [ ] Marketing
     - [ ] Tryhackme room - Link:
-    - [ ] Youtube Video
+    - [ ] Youtube Video - Link: 
 - [x] help mode (-h)
 - [x] check backslah
 - [ ] optional config file
     - [x] load config 
-    - [ ] save config
     - [x] json file 
     - [ ] config for "dont show" in title/body
 - [ ] Proxy
@@ -116,7 +115,7 @@ go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -
     - [x] CSV
     - [ ] Json
     - [ ] HTML
-- [ ] Send Mail?
+- [ ] Send Mail???
 - [x] Progress bar
 - [ ] list of sites
 - [ ] Parameter
