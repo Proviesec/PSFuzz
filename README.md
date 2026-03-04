@@ -1,213 +1,151 @@
-![PSFuzz](https://user-images.githubusercontent.com/6010786/176360134-adc6d195-60b0-4628-af06-b6b42afaffae.png)
-![](https://us-central1-progress-markdown.cloudfunctions.net/progress/85)
-# PSFuzz - ProvieSec Fuzz Scanner - Web path/file discovery
-[![License](https://img.shields.io/badge/license-MIT-_red.svg)](https://opensource.org/licenses/MIT)
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwisiswant0/go-dork/issues)
-[![Twitter](https://img.shields.io/twitter/follow/proviesec?label=Follow)](https://twitter.com/proviesec)
+# PSFuzz 1.0
 
-PSFuzz - ProvieSec Fuzz Scanner is a web path and file discovery tool designed to scan web directories, files, and other endpoints efficiently. It allows security professionals to explore potential vulnerabilities through fuzzing by sending a wide range of requests to various URLs, using both predefined and dynamically generated payloads.
+Concurrent web fuzzer in Go for endpoint and directory discovery. ffuf-compatible CLI with extra features (timing, recursion strategy, HTTP/2, VHost, response-analysis modules).
 
-The tool supports custom configurations, such as recursive directory scanning, status code filtering, payload generation, request throttling, and more. PSFuzz is built with high concurrency to handle multiple requests in parallel while also allowing rate limiting.
+**Requirements:** Go 1.21+ (see `go.mod`). Build from source; or use a pre-built binary if provided for your platform.
 
-It includes several bypass techniques for common restrictions, and it is flexible enough to detect possible false positives, such as 404-like responses. The tool outputs findings to a file or directly to the console for further analysis.
+## Build and Run
 
-<a href="https://proviesec.org/">
-    <img src="https://avatars.githubusercontent.com/u/92156402?s=400&u=7fe0dbb9085a37818ee8c2b061432a9a69cbff42&v=4" alt="Proviesec logo" title="Proviesec" align="right" height="60" />
-</a>
-<a href="https://www.buymeacoffee.com/proviesec" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
-
-Table of Contents
-------------
-* [Introduction](#introduction)
-* [Installation](#installation--usage)
-* [Wordlists](#wordlists-important)
-* [Options](#options)
-* [How to use](#how-to-use)
-* [Todos](#todos)
-* [Tips](#tips)
-* [License](#license)
-
-Introduction 
-------------
-
-:star: Star us on GitHub — it motivates a lot! :star:
-
-Web path discovery
-
-Discover with ProSecFuzz hidden files and directories on a web server.
-
-## Disclaimer: DONT BE A JERK!
-Needless to mention, please use this tool very very carefully. The authors won't be responsible for any consequences. 
-
-# Installation & Usage
-
-```go get https://github.com/Proviesec/PSFuzz```
-```go install github.com/Proviesec/PSFuzz@latest```
-
-Wordlists
----------------
-**Summary:**
-  - the Wordlist is a text file, each line is a path.
-  - Here you get suitable lists: https://github.com/Proviesec/directory-payload-list
-
-Options
----------------
-**Required**
-* `-u`/`-url` Example: `-u https://www.google.com`
- 
- **Optional**
-* `-o`/`-output` Example: `-o google_output` Default: output.txt
-* `-d`/`-dirlist` Example: `-d list.txt` Default is https://raw.githubusercontent.com/Proviesec/directory-payload-list/main/directory-full-list.txt
-* `-s`/`-status` Example: `-s true` Default:false only Status Code 200 
-* `-c`/`-concurrency` Example:  `-c 5 `
-* `-fscn`/`-filterStatusCodeNot`  Example: `-fscn 404`  Don't show response status code 404
-* `-fsc`/`-filterStatusCode` Example: `-fsc 200,301` Show only response status code 200 and 301
-* `-fl`/`-filterLength` Example: `-fl 122,1234,1235,1236` or `-fl 122,1234-1236` Show only the response with this length (or length range)
-* `-fln`/`-filterLengthNot` Example: `-fln 122,1234,1235,1236` or `-fln 122,1234-1236` Show not this response with this length (or length range)
-* `-fm`/`-filterMatchWord` Example: `-fm admin`
-* `-rah`/`-requestAddHeader` Example: `-rah Host:127.0.0.1`
-* `-tr`/`-throttleRate` Example: `-tr 10` -> max requests per second
-* `-b`/`-bypass` Example: `-b true` -> bypass status code: 401,402,403
-* `-g`/`-generate_payload` Example: `-g 100` -> generate a,aa,ab,abc,aaa,abb,bbc
-* `-od` /`-onlydomains` Example: `-od true` Show only domains in the outputfile (no status code)
-* checkBackslash Example -checkBackslash true
-* `-t` /`-filterTestLength` Example: `-t true` make a test request and check if any other request has the same length, if yes, then skip the result for this request
-* `fws` / `filterWrongStatus200` Example: `-fws true` - Don´t show: in title: "Access Gateway", "Not Found", "Error"/"ERROR", "403", "Bad Request" ,"Forbidden", "500", "Internal Server Error" and body length <= 1
-
-
-# Attack Configuration / Patterns
-
-# Response Analysis 
-
-# Example
-```
-go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o testest -s true -fscn 404,301,302
-
-go run main.go -url https://www.google.com/ -d dir-full.txt -c 2 -o googletest -s true -fl 122,1565-1569 -fln 1566-1568
+```bash
+go build -o psfuzz .
+./psfuzz -u https://example.com
 ```
 
-![image](https://user-images.githubusercontent.com/6010786/180856727-0d8791af-6076-417c-94a8-05bc786b5a4d.png)
+Or with Makefile: `make build` then `./psfuzz -u https://example.com`.
 
-![image](https://user-images.githubusercontent.com/6010786/180856025-6922fc14-9baf-4ba7-b5c0-6d2073c5b0c2.png)
+## Get started in 3 commands
 
-# Todos
+```bash
+go build -o psfuzz .                    # build
+./psfuzz -u https://example.com/FUZZ -w default -o scan   # run (replace URL with your target)
+# → results in scan.txt; use -of json for scan.json
+```
 
+Need more control? `./psfuzz -h` for all flags. **Presets:** `-preset quick` (fast smoke), `-preset stealth` (low profile), `-preset thorough` (full discovery). Examples: [CHEATSHEET.md](CHEATSHEET.md).
 
-## General
-- [x] Multi requests
-- [x] Optional param output
-- [x] check https or http
-- [x] Logo and Version output
-- [ ] Marketing
-    - [ ] Tryhackme room - Link:
-    - [ ] Youtube Video - Link: 
-- [x] help mode (-h)
-- [x] check backslah
-- [ ] optional config file
-    - [x] load config 
-    - [x] json file 
-    - [ ] config for "dont show" in title/body
-- [ ] Proxy
-- [x] throttle
-- [x] detect "too many requests" 
-- [ ] Output
-    - [x] TXT
-    - [x] CSV
-    - [ ] Json
-    - [ ] HTML
-- [ ] Send Mail???
-- [x] Progress bar
-- [ ] list of sites
-- [ ] Parameter
-    - [ ] random payload generator 
-    - [ ] choice of dirlist from proviesec github repo
-    - [ ] subdomain list from proviesec github repo
-    - [ ] Port List
-    - [x] Length
-    - [x] Length range show and not show
-    - [x] Response Status List show
-    - [x] Response Status Range show
-    - [x] Response Status List not show
-    - [x] Response Status Range not show
-    - [x] Filter content type 
-    - [x] Words match list title/page
-    - [x] Set Optional Header
-    - [ ] scan subdirs with depth (list: admin/public/static)
-    - [ ] exclude subdirs (list: js/img)
-    - [ ] add default-extensions (yml,php,aspx,jsp,html,js)
-    - [ ] lowercase
-    - [ ] uppercase
-    - [ ] Min response-size
-    - [ ] Max response-size
-    - [ ] Set request Timeout
-    - [ ] Add Cookies
-    - [ ] quite Mode 
-    - [ ] random user-agent
-    - [x] show only the urls 
-    - [x] add user agent
-    - [ ] username /password basic Auth 
+## What makes PSFuzz 1.0 stand out
 
-## Attack
-- [x] make GET requests 
-- [ ] make put request 
-- [ ] make POST requests 
-- [ ] try PUT/DELETE/PATCH
-- [x] Wordlist txt parameter 
-- [x] Wildcard parameter 
-- [ ] List of URLs
-- [ ] depth by dir
-- [ ] Word list 
-    - [ ] Automatic Word list for any file html,txt, php.. 
-         - [ ] payload generator, include, start or end with specific word and max length 
-         - [ ] file ending as parameter list 
-    - [ ] get list from any url 
-    - [x] get list from proviesec github account default
-    - [ ] multiple word lists 
-- [ ] Crlf scan
-- [ ] open redirect scan
-- [ ] fuzzing parameter (from a-z)
-- [ ] fuzzing http verbs
-- [ ] Wordlist formats, upper lower 
+- **Single binary, ffuf-compatible:** Same idea as ffuf (FUZZ, wordlists, filters), same flag names where it makes sense (`-mc`, `-fc`, `-w`, `-request`, `-x`, `-replay-proxy`). No Python/Ruby stack required.
+- **Response modules built in:** Technology fingerprinting, CORS check, URL/link extraction, optional OpenAI verdict—no second tool. Results in all output formats (JSON, HTML, NDJSON).
+- **Audit log:** Write every request/response to a file (NDJSON); filter or analyze after the run without rescanning.
+- **Link-driven discovery:** Feed links from HTML (and URLs from body) into the scan queue (`-enqueue-module-urls links`), limit depth—spider mode without a separate tool.
+- **Explore AI:** Probe the base URL once (fingerprint + headers), ask OpenAI for a **wordlist and extensions recommendation** (e.g. WordPress → wordpress paths, TYPO3 → typo3). One flag (`-explore-ai`); requires `OPENAI_API_KEY`. Then run your scan with the suggested options.
+- **Recursion with strategy:** `default` (only on configured status codes) or `greedy` (follow every match). Bypass variants for 403/401, WAF-adaptive slowdown, auto-wildcard per host.
+- **Timing & control:** Max duration overall and per task, resume, stop on status/matches/errors. HTTP/2, VHost fuzzing, proxy and replay proxy.
 
-## Response Analysis
-- [x] show response status 
-- [x] count words
-- [ ] show response time
-- [ ] show lines
-- [ ] dump the response in files
-- [ ] analyse the response with AI
-- [ ] Fingerprint Software (Wordpress/php/java/Apache/nginx etc.)
-- [ ] CORS analyse
-- [ ] bypass
-    - [x] 403 Bypass, config 
-    - [ ] Status bypass
-- [ ] Words match list title/page/header 
-    - [ ] output the match line 
-- [x] Show positiv false: status 200, but title 404
-- [ ] Show possible block response, after x requests "403 or too many request" 
-- [x] Show possible false 200, same length of a random site
-- [x] Show confident value, if the folder/file not in the response
-- [ ] Intilligence
-   - [x] Automatically detect false 200 (really 404) 
-   - [ ] too many rediretcs and then restart again, with the exclusion of
-   - [ ] Show the most unique target 
-- [x] Show titel of Page
-- [x] Show Response Body Length
-- [x] filter possibile 404
-- [ ] show content type 
-- [ ] Fingerprint check 
-- [ ] fuzz Parameter check (normal Response vs. with paramter)
-- [ ] show reflected cookie 
-- [ ] show reflected params
-- [ ] show reflected base64 params
-- [ ] search for interesting strings
-- [ ] compare two scans 
-    - [ ] save scan
-    - [ ] load scan
-- [x] Redirect handler - 301... -> Can be activated via parameter
-    - [ ] Show Redirect URL
-    - [ ] Skip Status filter if redirect true (via parameter) 
-       
-       
-# Example
-`go run main.go -url https://www.google.com -d list.txt -s true -c 2`
+Details and examples: [CHEATSHEET.md](CHEATSHEET.md), [MODULES.md](MODULES.md), [RECURSION.md](RECURSION.md).
+
+## Quick reference
+
+**See [CHEATSHEET.md](CHEATSHEET.md)** for copy-paste commands and ffuf-style examples.
+
+## Main usage
+
+```bash
+./psfuzz -u https://target.tld -w default -c 20 -D 2 -of json -o scan
+```
+
+Output files (base name `scan`): `scan.txt`, `scan.json`, `scan.html`, `scan.csv`, `scan.ndjson` (depending on `-of`).
+
+## Architecture
+
+- `main.go` – CLI entrypoint
+- `internal/config` – flags, config file, validation
+- `internal/httpx` – HTTP client, retries, throttling, safe-mode
+- `internal/filter` – status/length/content/regex/dedupe
+- `internal/engine` – task queue, workers, recursion, report
+- `internal/output` – TXT, JSON, HTML, CSV, NDJSON, FFUF-JSON
+- `internal/modules` – response analyzers (fingerprint, cors, ai, urlextract, links)
+
+## Flags (overview)
+
+- **Wordlists:** `-w`, `-w list.txt:FUZZ`, `-e`, `-ext-defaults`, `-mode`, `-list`, `-enc` (payload encoders)
+- **Filtering:** `-mc`/`-fc`, `-ms`/`-fs`, `-mw`/`-fw`, `-nd`, `-bw`, `-is`, `-fr`
+- **HTTP:** `-X`, `-data` (body or `@file`), `-H`, `-request`, `-x` (proxy), `-http2`, `-vhost`, `-insecure` / `-k` (skip TLS verify)
+- **Timing:** `-maxtime`, `-maxtime-job`, `-timeout` (request timeout), `-recursion-strategy default|greedy`, `-rsc` (recursion status codes)
+- **Modules:** `-modules fingerprint,cors,ai,urlextract,links`, `-ai-prompt "..."`, `-ai-provider openai|ollama|gemini`, `-enqueue-module-urls urlextract,links`, `-extracted-urls-file <path>` (write all extracted URLs to file, one per line)
+- **Explore AI:** `-explore-ai` — probe base URL, get wordlist/extensions recommendation from OpenAI (requires `OPENAI_API_KEY`). Use `-explore-ai-wordlists-dir <dir>` to auto-select from local files, or `-explore-ai-wordlist name:path_or_url` to use your own lists/URLs (e.g. SecLists). See [CHEATSHEET.md](CHEATSHEET.md#explore-ai) for example wordlist URLs.
+- **Audit:** `-audit-log <path>`, `-audit-max-body <bytes>` (NDJSON request/response log)
+- **Output:** `-of txt|json|html|csv|ndjson|ffufjson`, `-o`, `-save-config`
+- **Resume/Stop:** `-resume`, `-resume-every`, `-sf`, `-se`, `-sa`
+- **Login:** `-login-url`, `-login-user`, `-login-pass` (or `-login-body` for custom form); session cookies applied to all requests.
+- **Presets:** `-preset quick|stealth|thorough` (apply a set of defaults; CLI overrides)
+- **Other:** `-D` (depth), `-c` (concurrency), `-safe`, `-allow-hosts`, `-cf` (config file)
+
+Full list: `./psfuzz -h`.
+
+## Response modules
+
+| Module       | Description |
+|-------------|-------------|
+| `fingerprint` | Technology detection (headers/body): e.g. nginx, PHP, WordPress. |
+| `cors`      | CORS header evaluation (e.g. permissive `*`, credentials). |
+| `ai`        | AI security verdict (status + URL + body). Provider: **openai** (default) \| **ollama** \| **gemini**. Keys: `OPENAI_API_KEY`, or `GEMINI_API_KEY`/`GOOGLE_API_KEY`, or none for Ollama. Custom prompt: `-ai-prompt` or config `aiPrompt`; placeholders: `{{status}}`, `{{method}}`, `{{url}}`, `{{body}}`. |
+| `urlextract` | Parses URLs from response body and Location header; deduplicates. Output: `urls` list per result. |
+| `links` | Extracts HTML links (`href`, `action`, `src`), resolves to absolute URLs. Output: `urls` list. Use with `-enqueue-module-urls links` to enqueue discovered URLs. |
+
+Example: `./psfuzz -u https://example.com/FUZZ -w wordlist.txt -modules fingerprint,cors,ai -of json -o scan`
+
+**Details and usage:** [MODULES.md](MODULES.md) — when modules run, where data appears (TXT vs JSON), and how to combine with filters and AI.
+
+## Config file
+
+Use `-cf config.json`. A minimal `config.example.json` is included; copy and edit as needed. Load order: config file (if `-cf`) → preset (if `-preset`) → CLI; CLI overrides the rest. Example:
+
+```json
+{
+  "url": "https://example.com",
+  "dirlist": "default",
+  "concurrency": 20,
+  "depth": 2,
+  "output": "scan",
+  "outputFormat": "json",
+  "safeMode": true,
+  "modules": "fingerprint,cors,ai,urlextract,links",
+  "maxtime": 0,
+  "maxtimeJob": 0,
+  "recursionStrategy": "default",
+  "http2": false,
+  "vhost": false,
+  "aiPrompt": "",
+  "aiProvider": "openai",
+  "aiEndpoint": "",
+  "aiModel": "",
+  "auditLog": "",
+  "auditMaxBodySize": 0,
+  "enqueueModuleUrls": "",
+  "extractedUrlsFile": ""
+}
+```
+
+- **auditLog:** Path to NDJSON file for full request/response audit (empty = off).
+- **auditMaxBodySize:** Max body size per audit entry in bytes (0 = unlimited).
+- **enqueueModuleUrls:** Comma-separated module names whose `urls` output is queued for scanning (e.g. `urlextract,links`).
+- **extractedUrlsFile:** Path to write all extracted URLs (from any module with `urls` output) to a file, one per line; no enqueue. Empty = off.
+
+## Security
+
+- **Safe mode** (`-safe=true` by default): blocks loopback/private/link-local. Use `-safe=false` for local or authorized targets only.
+- **TLS skip:** `-insecure` or `-k` skips TLS certificate verification (e.g. self-signed certs, Burp MITM).
+- **Login:** `-login-url https://target/login -login-user admin -login-pass secret` performs one login request and uses the session cookies for all fuzz requests. Use `-login-body` for custom form fields or JSON.
+- Optional scope: `-allow-hosts host1,host2`.
+- Retries: `-retry`, `-retry-backoff-ms`.
+
+## Further docs
+
+- **[CHEATSHEET.md](CHEATSHEET.md)** – main command reference
+- **[MODULES.md](MODULES.md)** – response modules (fingerprint, CORS, AI): usage and evaluation
+- **[RECURSION.md](RECURSION.md)** – recursion and `-recursion-strategy`
+- **[FUZZING_GUIDES.md](FUZZING_GUIDES.md)** – mapping of bug-bounty fuzzing guides to PSFuzz; gaps and feature ideas
+- **[TOOL_COMPARISON.md](TOOL_COMPARISON.md)** – comparison with ffuf, wfuzz, and other fuzzers
+- **[DOCKER.md](DOCKER.md)** – Docker build and run
+- **[TESTING.md](TESTING.md)** – how to run tests, parameter test script (`scripts/test_all_params.sh`), and what is covered
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** – how to contribute  
+  **CI:** GitHub Actions runs `go build`, `go test`, and `go vet` on push and pull requests (see [.github/workflows/ci.yml](.github/workflows/ci.yml)).
+- **[ROADMAP.md](ROADMAP.md)** – planned features (e.g. response modules for later releases)
+- **[IDEAS.md](IDEAS.md)** – north-star ideas (reporting, UX, integrations) for future “extra class” features
+- **[CHANGELOG.md](CHANGELOG.md)** – release history
+
+## Legal
+
+Use only on systems you are authorized to test.

@@ -1,0 +1,11 @@
+PSFuzz Scan Report
+Target: 
+Wordlist:  (0 entries)
+Duration: 0s
+Total Requests: 0
+
+
+Status Distribution:
+
+---
+Modules used: none

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  psfuzz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: psfuzz:1.0.0
+    container_name: psfuzz
+    
+    # Override entrypoint for interactive use
+    # entrypoint: ["/bin/sh"]
+    
+    # Mount volumes for wordlists and output (create config.json from config.example.json if needed)
+    volumes:
+      - ./wordlists:/app/wordlists:ro
+      - ./output:/app/output
+      - ./config.json:/app/config.json:ro
+    
+    # Example: Scan example.com
+    command: ["-u", "https://example.com", "-d", "default", "-c", "5", "-o", "/app/output/scan"]
+    
+    # Network mode
+    network_mode: "bridge"
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+        reservations:
+          cpus: '1.0'
+          memory: 256M
+    
+    # Environment variables (optional)
+    environment:
+      - TZ=UTC
+    
+    # Restart policy
+    restart: "no"
+
+  # Example: Scan with custom wordlist
+  psfuzz-custom:
+    image: psfuzz:1.0.0
+    container_name: psfuzz-custom
+    volumes:
+      - ./wordlists:/app/wordlists:ro
+      - ./output:/app/output
+    command: ["-u", "https://target.com", "-d", "/app/wordlists/custom.txt", "-c", "10"]
+    profiles:
+      - custom
+
+# Networks
+networks:
+  default:
+    name: psfuzz-network
+

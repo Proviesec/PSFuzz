@@ -1,0 +1,72 @@
+{
+  "target_url": "https://intrepidtravelaustralia.wordpress.com/FUZZ",
+  "wordlist_source": "wordlists/minimal-test.txt",
+  "wordlist_count": 9,
+  "total_requests": 9,
+  "duration": 5163000000,
+  "status_count": {
+    "200 OK": 2,
+    "404 Not Found": 7
+  },
+  "results": [
+    {
+      "url": "https://intrepidtravelaustralia.wordpress.com/login",
+      "status_code": 200,
+      "status": "200 OK",
+      "content_type": "text/html; charset=utf-8",
+      "length": 126442,
+      "words": 635,
+      "lines": 54,
+      "time_ms": 1168,
+      "depth": 0,
+      "timestamp": "2026-02-23T00:28:53.672673+13:00",
+      "confidence": 0.6000000000000001,
+      "input": {
+        "FUZZ": "login"
+      },
+      "position": 1,
+      "module_data": {
+        "fingerprint": {
+          "technologies": [
+            "nginx",
+            "wordpress",
+            "react",
+            "bootstrap"
+          ]
+        }
+      }
+    },
+    {
+      "url": "https://intrepidtravelaustralia.wordpress.com/admin",
+      "status_code": 200,
+      "status": "200 OK",
+      "content_type": "text/html; charset=utf-8",
+      "length": 126442,
+      "words": 635,
+      "lines": 54,
+      "time_ms": 1366,
+      "depth": 0,
+      "timestamp": "2026-02-23T00:28:55.042881+13:00",
+      "confidence": 0.6000000000000001,
+      "input": {
+        "FUZZ": "admin"
+      },
+      "position": 2,
+      "module_data": {
+        "fingerprint": {
+          "technologies": [
+            "nginx",
+            "wordpress",
+            "react",
+            "bootstrap"
+          ]
+        }
+      }
+    }
+  ],
+  "discovered_dirs": null,
+  "modules": [
+    "fingerprint"
+  ],
+  "commandline": "./psfuzz -u https://intrepidtravelaustralia.wordpress.com/FUZZ -w wordlists/minimal-test.txt -c 1 -mc 200 -modules fingerprint -o intrepid_fp -of json"
+}

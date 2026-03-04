@@ -1,0 +1,123 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# Build output
+/psfuzz
+/tmp/
+/build/
+
+# Output files
+output.txt
+*_output.txt
+*.log
+scan.txt
+scan.json
+scan.html
+scan.csv
+scan.ndjson
+sample.txt
+sample.json
+out-*.csv
+out-*.txt
+out-*.ndjson
+report-*.html
+report-*.txt
+test-run.json
+test-run.txt
+
+# Generated payload files
+default_payload.txt
+random_payload.txt
+remote_payload.txt
+
+# Test files
+test_payload.txt
+test_*.txt
+*_test.txt
+paramtest_out/
+
+# Coverage files
+coverage.out
+coverage.html
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# IDE / Editor (local rules and config – not committed)
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.iml
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
