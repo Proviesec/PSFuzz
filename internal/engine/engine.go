@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"os"
@@ -114,11 +114,11 @@ type Engine struct {
 	filter    filter.AllowFilter
 	wordlists []config.ResolvedWordlist
 	testLen   int
-	rand      *rand.Rand
 	rawReq    *rawRequest
 	cancel    context.CancelFunc
 	auditFile *os.File
 	auditMu   sync.Mutex
+	analyzers []modules.Analyzer
 }
 
 func New(cfg *config.Config) (*Engine, error) {
@@ -134,7 +134,6 @@ func New(cfg *config.Config) (*Engine, error) {
 		client:  client,
 		filter:  filter.New(cfg),
 		testLen: -1,
-		rand:    rand.New(rand.NewSource(time.Now().UnixNano())),
 	}, nil
 }
 
@@ -149,7 +148,8 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	defer cancel()
 	e.cancel = cancel
 	if e.cfg.MaxTime > 0 {
-		time.AfterFunc(time.Duration(e.cfg.MaxTime)*time.Second, cancel)
+		timer := time.AfterFunc(time.Duration(e.cfg.MaxTime)*time.Second, cancel)
+		defer timer.Stop()
 	}
 
 	wordlists, err := config.ResolveWordlists(ctx, e.cfg)
@@ -165,6 +165,7 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	if e.cfg.AutoCalibrate {
 		e.applyAutoCalibration(ctx)
 	}
+	e.analyzers = modules.Enabled(&e.cfg.ModuleConfig)
 	if e.cfg.RequestFile != "" {
 		req, err := parseRawRequest(e.cfg.RequestFile)
 		if err != nil {
@@ -173,7 +174,7 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 		e.rawReq = req
 	}
 	if e.cfg.ResumeFile != "" {
-		_ = loadResume(e.cfg.ResumeFile)
+		// Resume state loaded later when populating visited map
 	}
 
 	baseURLs := e.cfg.URLs
@@ -202,7 +203,7 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 		WordlistCount:  wordlistCount,
 		StatusCount:    map[string]int{},
 		Modules:        append([]string(nil), e.cfg.ModuleConfig.Modules...),
-		StartedAt:     started,
+		StartedAt:      started,
 	}
 
 	if e.cfg.LoginURL != "" {
@@ -221,13 +222,14 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	}
 
 	taskCh := make(chan Task, e.cfg.Concurrency*2)
+	var taskWg sync.WaitGroup
 	var closeOnce sync.Once
 	closeTaskCh := func() {
 		closeOnce.Do(func() {
+			taskWg.Wait()
 			close(taskCh)
 		})
 	}
-	var inflight atomic.Int64
 	var totalReq atomic.Int64
 	var totalHits atomic.Int64
 	var totalErr atomic.Int64
@@ -289,12 +291,12 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 			return
 		}
 		visited[key] = struct{}{}
-		inflight.Add(1)
+		taskWg.Add(1)
 		totalEnqueued.Add(1)
 		mu.Unlock()
 		select {
 		case <-runCtx.Done():
-			inflight.Add(-1)
+			taskWg.Done()
 			return
 		case taskCh <- t:
 		}
@@ -309,13 +311,13 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	// Producer in separate goroutine so it never blocks when the task channel buffer (Concurrency*2)
 	// is full. Only the producer closes the channel when it exits (so no "send on closed channel" when
 	// context is cancelled while producer is blocked on send).
-	go e.runProducer(runCtx, baseURLs, wordlists, keywordList, headerHasKeyword, bodyHasKeyword, enqueue, closeTaskCh, &inflight)
+	go e.runProducer(runCtx, baseURLs, wordlists, keywordList, headerHasKeyword, bodyHasKeyword, enqueue, closeTaskCh, &taskWg)
 
 	for i := 0; i < e.cfg.Concurrency; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			e.runWorker(runCtx, taskCh, report, st, enqueue, keywordList, dirs, &mu, cancel, &processed, &bypassCount, visited, &inflight)
+			e.runWorker(runCtx, taskCh, report, st, enqueue, keywordList, dirs, &mu, cancel, &processed, &bypassCount, visited, &taskWg)
 		}()
 	}
 
@@ -323,7 +325,9 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	close(done)
 	fmt.Fprintln(os.Stderr, "")
 	if e.cfg.ResumeFile != "" {
-		_ = writeResume(e.cfg.ResumeFile, visited)
+		if err := writeResume(e.cfg.ResumeFile, visited); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to write final resume state: %v\n", err)
+		}
 	}
 	report.TotalRequests = totalReq.Load()
 	report.Duration = time.Since(started).Round(time.Millisecond)
@@ -336,14 +340,9 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	return report, nil
 }
 
-// runProducer fills taskCh with initial and recursion tasks for each base URL. It runs in a goroutine and closes taskCh when done.
-func (e *Engine) runProducer(ctx context.Context, baseURLs []string, wordlists []config.ResolvedWordlist, keywordList config.ResolvedWordlist, headerHasKeyword bool, bodyHasKeyword bool, enqueue func(Task, bool), closeTaskCh func(), inflight *atomic.Int64) {
-	defer func() {
-		for inflight.Load() != 0 {
-			time.Sleep(2 * time.Millisecond)
-		}
-		closeTaskCh()
-	}()
+// runProducer fills taskCh with initial and recursion tasks for each base URL. It runs in a goroutine and closes taskCh when done (after all enqueued tasks are finished, via taskWg).
+func (e *Engine) runProducer(ctx context.Context, baseURLs []string, wordlists []config.ResolvedWordlist, keywordList config.ResolvedWordlist, headerHasKeyword bool, bodyHasKeyword bool, enqueue func(Task, bool), closeTaskCh func(), taskWg *sync.WaitGroup) {
+	defer closeTaskCh()
 	for _, baseURL := range baseURLs {
 		if ctx.Err() != nil {
 			return
@@ -385,7 +384,7 @@ func (e *Engine) runProducer(ctx context.Context, baseURLs []string, wordlists [
 }
 
 // runWorker consumes tasks from taskCh, calls processTask, enqueues recursion/bypass tasks, and updates report and shared state.
-func (e *Engine) runWorker(ctx context.Context, taskCh <-chan Task, report *Report, st *runState, enqueue func(Task, bool), keywordList config.ResolvedWordlist, dirs map[string]struct{}, mu *sync.Mutex, cancel context.CancelFunc, processed *atomic.Int64, bypassCount *atomic.Int64, visited map[string]struct{}, inflight *atomic.Int64) {
+func (e *Engine) runWorker(ctx context.Context, taskCh <-chan Task, report *Report, st *runState, enqueue func(Task, bool), keywordList config.ResolvedWordlist, dirs map[string]struct{}, mu *sync.Mutex, cancel context.CancelFunc, processed *atomic.Int64, bypassCount *atomic.Int64, visited map[string]struct{}, taskWg *sync.WaitGroup) {
 	for task := range taskCh {
 		taskCtx := ctx
 		var taskCancel context.CancelFunc
@@ -401,9 +400,16 @@ func (e *Engine) runWorker(ctx context.Context, taskCh <-chan Task, report *Repo
 				enqueue(Task{URL: u, Depth: task.Depth + 1, Values: copyValues(task.Values), Method: task.Method, Headers: task.Headers}, false)
 			}
 		}
-		processed.Add(1)
 		if e.cfg.ResumeFile != "" && e.cfg.ResumeEvery > 0 && processed.Load()%int64(e.cfg.ResumeEvery) == 0 {
-			_ = writeResume(e.cfg.ResumeFile, visited)
+			mu.Lock()
+			snapshot := make(map[string]struct{}, len(visited))
+			for k := range visited {
+				snapshot[k] = struct{}{}
+			}
+			mu.Unlock()
+			if err := writeResume(e.cfg.ResumeFile, snapshot); err != nil {
+				fmt.Fprintf(os.Stderr, "warning: failed to write resume checkpoint: %v\n", err)
+			}
 		}
 		if hasResp && len(e.cfg.StopOnStatus) > 0 && config.MatchAnyRange(e.cfg.StopOnStatus, statusCode) {
 			cancel()
@@ -459,13 +465,10 @@ func (e *Engine) runWorker(ctx context.Context, taskCh <-chan Task, report *Repo
 				}
 			}
 		}
-		if statusCode == http.StatusTooManyRequests || statusCode == http.StatusForbidden {
-			st.suspiciousCount.Add(1)
-		}
 		if e.cfg.WAFAdaptive && int(st.suspiciousCount.Load()) >= e.cfg.WAFSlowdownThreshold {
 			e.client.SetScale(e.cfg.WAFSlowdownFactor)
 		}
-		inflight.Add(-1)
+		taskWg.Done()
 	}
 }
 
@@ -522,11 +525,99 @@ func aggregateExtractedURLs(results []Result) []string {
 }
 
 func (e *Engine) processTask(ctx context.Context, task Task, report *Report, st *runState) (statusCode int, hasResp bool, urlsToEnqueue []string) {
-	host := ""
-	if u, err := url.Parse(task.URL); err == nil {
-		host = u.Host
+	host := hostFromURL(task.URL)
+	extraDelay := e.computeExtraDelay(host, st)
+
+	method, body, headers := e.requestPartsFor(task)
+	spec := httpx.RequestSpec{
+		URL:     task.URL,
+		Method:  method,
+		Body:    body,
+		Headers: headers,
+		Delay:   extraDelay,
 	}
-	extraDelay := time.Duration(0)
+	start := time.Now()
+	result, err := e.client.Do(ctx, spec)
+	st.totalReq.Add(1)
+	if err != nil {
+		e.handleRequestError(task, report, st, err)
+		return 0, false, nil
+	}
+	resp := result.Resp
+	finalURL := result.FinalURL
+	defer resp.Body.Close()
+	if e.cfg.ReplayProxy != "" && !e.cfg.ReplayOnMatch {
+		e.client.Replay(ctx, spec, e.cfg.ReplayProxy)
+	}
+
+	respBody, truncated, err := readBodyWithLimit(resp.Body, config.EffectiveMaxResponseSize(e.cfg))
+	if err != nil {
+		st.mu.Lock()
+		report.StatusCount[statusCountReadError]++
+		st.mu.Unlock()
+		return resp.StatusCode, true, nil
+	}
+	if e.auditFile != nil {
+		e.writeAuditEntry(&spec, resp.StatusCode, resp.Header, respBody)
+	}
+	elapsedMS := int(time.Since(start).Milliseconds())
+	st.lastStatus.Store(int64(resp.StatusCode))
+	e.updateJitterLatency(host, elapsedMS, st)
+
+	text := string(respBody)
+	lowerText := strings.ToLower(text)
+	status := resp.Status
+	contentType := resp.Header.Get("Content-Type")
+	redirectURL := resolveRedirectURL(task.URL, finalURL, resp)
+	words := countWords(text)
+	lines := countLines(text)
+
+	if e.cfg.AutoWildcard && host != "" {
+		baseline := e.ensureBaseline(ctx, host, task, st)
+		if baseline.Valid && matchesBaseline(baseline, resp.StatusCode, len(respBody), words, lines) {
+			recordFilteredHit(report, st.mu, status)
+			return resp.StatusCode, true, nil
+		}
+	}
+
+	suspect := e.trackWAFSuspicion(host, resp, lowerText, st)
+	title := extractTitle(text, lowerText)
+	interesting := findInteresting(lowerText, e.cfg.InterestingStrings)
+
+	if filtered, code := e.applyFilters(task, report, st, resp.StatusCode, status, title, text, contentType, respBody, words, lines, elapsedMS, truncated, suspect, interesting); filtered {
+		return code, true, nil
+	}
+
+	confidence := computeConfidence(resp.StatusCode, title, len(respBody), words, lines, contentType, truncated, suspect)
+	moduleData := runModules(ctx, e.analyzers, task, method, resp, text, contentType, len(respBody), words, lines)
+
+	e.recordResult(task, report, st, resp.StatusCode, status, contentType, redirectURL, len(respBody), words, lines, elapsedMS, truncated, confidence, interesting, moduleData)
+
+	if e.cfg.DumpResponses {
+		dumpPath := e.cfg.DumpDir
+		if dumpPath == "" {
+			dumpPath = e.cfg.OutputBase + "_responses"
+		}
+		_ = dumpResponse(dumpPath, task.URL, method, resp.StatusCode, contentType, respBody)
+	}
+	st.totalHits.Add(1)
+	e.printResult(task, status, len(respBody), words)
+	if e.cfg.ReplayProxy != "" && e.cfg.ReplayOnMatch {
+		e.client.Replay(ctx, spec, e.cfg.ReplayProxy)
+	}
+	urlsToEnqueue = extractURLsFromModuleData(moduleData, e.cfg.ModuleConfig.EnqueueModuleUrls)
+	return resp.StatusCode, true, urlsToEnqueue
+}
+
+func hostFromURL(rawURL string) string {
+	if u, err := url.Parse(rawURL); err == nil {
+		return u.Host
+	}
+	return ""
+}
+
+func (e *Engine) computeExtraDelay(host string, st *runState) time.Duration {
+	var extraDelay time.Duration
 	if e.cfg.WAFAdaptive && host != "" {
 		st.mu.Lock()
 		sCount := st.hostSuspicion[host]
@@ -546,122 +637,103 @@ func (e *Engine) processTask(ctx context.Context, task Task, report *Report, st 
 			}
 		}
 	}
+	return extraDelay
+}
 
-	method, body, headers := e.requestPartsFor(task)
-	spec := httpx.RequestSpec{
-		URL:     task.URL,
-		Method:  method,
-		Body:    body,
-		Headers: headers,
-		Delay:   extraDelay,
+func (e *Engine) handleRequestError(task Task, report *Report, st *runState, err error) {
+	st.totalErr.Add(1)
+	st.lastStatus.Store(-1)
+	if e.cfg.ShowStatus && !e.cfg.Quiet {
+		fmt.Printf("%s [ERR] %v\n", task.URL, err)
 	}
-	start := time.Now()
-	resp, err := e.client.Do(ctx, spec)
-	st.totalReq.Add(1)
-	if err != nil {
-		st.totalErr.Add(1)
-		st.lastStatus.Store(-1)
-		if e.cfg.ShowStatus && !e.cfg.Quiet {
-			fmt.Printf("%s [ERR] %v\n", task.URL, err)
-		}
-		st.mu.Lock()
-		report.StatusCount[statusCountError]++
-		st.mu.Unlock()
-		if e.cfg.StopOnErrors {
-			e.cancel()
-		}
-		return 0, false, nil
+	st.mu.Lock()
+	report.StatusCount[statusCountError]++
+	st.mu.Unlock()
+	if e.cfg.StopOnErrors {
+		e.cancel()
 	}
-	defer resp.Body.Close()
-	if e.cfg.ReplayProxy != "" && !e.cfg.ReplayOnMatch {
-		e.client.Replay(ctx, spec, e.cfg.ReplayProxy)
-	}
+}
 
-	respBody, truncated, err := readBodyWithLimit(resp.Body, e.cfg.MaxResponseSize)
-	if err != nil {
-		st.mu.Lock()
-		report.StatusCount[statusCountReadError]++
-		st.mu.Unlock()
-		return resp.StatusCode, true, nil
+func (e *Engine) updateJitterLatency(host string, elapsedMS int, st *runState) {
+	if !e.cfg.JitterProfile || host == "" {
+		return
 	}
-	if e.auditFile != nil {
-		e.writeAuditEntry(&spec, resp.StatusCode, resp.Header, respBody)
+	st.mu.Lock()
+	prev := st.hostLatency[host]
+	if prev == 0 {
+		st.hostLatency[host] = float64(elapsedMS)
+	} else {
+		st.hostLatency[host] = jitterEWMAAlpha*float64(elapsedMS) + jitterEWMAOneMinusAlpha*prev
 	}
-	elapsedMS := int(time.Since(start).Milliseconds())
-	st.lastStatus.Store(int64(resp.StatusCode))
-	if e.cfg.JitterProfile && host != "" {
-		st.mu.Lock()
-		prev := st.hostLatency[host]
-		if prev == 0 {
-			st.hostLatency[host] = float64(elapsedMS)
-		} else {
-			st.hostLatency[host] = jitterEWMAAlpha*float64(elapsedMS) + jitterEWMAOneMinusAlpha*prev
-		}
-		st.mu.Unlock()
-	}
-	text := string(respBody)
-	status := resp.Status
-	contentType := resp.Header.Get("Content-Type")
-	redirectURL := ""
+	st.mu.Unlock()
+}
+
+func resolveRedirectURL(taskURL, finalURL string, resp *http.Response) string {
 	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-		redirectURL = resp.Header.Get("Location")
-	}
-	words := len(strings.Fields(text))
-	lines := countLines(text)
-	if e.cfg.AutoWildcard && host != "" {
-		baseline := e.ensureBaseline(ctx, host, task, st)
-		if baseline.Valid && matchesBaseline(baseline, resp.StatusCode, len(respBody), words, lines) {
-			recordFilteredHit(report, st.mu, status)
-			return resp.StatusCode, true, nil
+		if loc := resp.Header.Get("Location"); loc != "" {
+			return loc
 		}
 	}
-	suspect := isWAFSuspect(resp.Header, text) || resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode == http.StatusForbidden
-	if suspect {
-		st.suspiciousCount.Add(1)
-		if host != "" {
-			st.mu.Lock()
-			st.hostSuspicion[host]++
-			st.mu.Unlock()
+	if finalURL != "" {
+		reqNorm := strings.TrimSuffix(taskURL, "/")
+		finalNorm := strings.TrimSuffix(finalURL, "/")
+		if finalNorm != "" && finalNorm != reqNorm {
+			return finalURL
 		}
-		hash := sha1.Sum([]byte(text))
-		h := hex.EncodeToString(hash[:])
+	}
+	return ""
+}
+
+func (e *Engine) trackWAFSuspicion(host string, resp *http.Response, lowerText string, st *runState) bool {
+	suspect := isWAFSuspect(resp.Header, lowerText) || resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode == http.StatusForbidden
+	if !suspect {
+		return false
+	}
+	st.suspiciousCount.Add(1)
+	if host != "" {
 		st.mu.Lock()
-		st.wafHashCounts[h]++
-		count := st.wafHashCounts[h]
+		st.hostSuspicion[host]++
 		st.mu.Unlock()
-		if count > wafHashRepeatThreshold {
-			if host != "" {
-				st.mu.Lock()
-				st.hostSuspicion[host]++
-				st.mu.Unlock()
-			}
-		}
 	}
-	title := extractTitle(text)
-	interesting := findInteresting(text, e.cfg.InterestingStrings)
+	hash := sha1.Sum([]byte(lowerText))
+	h := hex.EncodeToString(hash[:])
+	st.mu.Lock()
+	st.wafHashCounts[h]++
+	count := st.wafHashCounts[h]
+	st.mu.Unlock()
+	if count > wafHashRepeatThreshold && host != "" {
+		st.mu.Lock()
+		st.hostSuspicion[host]++
+		st.mu.Unlock()
+	}
+	return true
+}
+
+// applyFilters runs all configured response filters (interesting strings, test length, wrong status/subdomain, 404 title, and the user filter).
+// Returns true if the response should be filtered out (not reported).
+func (e *Engine) applyFilters(task Task, report *Report, st *runState, statusCode int, status, title, text, contentType string, respBody []byte, words, lines, elapsedMS int, truncated, suspect bool, interesting []string) (filtered bool, code int) {
 	if len(e.cfg.InterestingStrings) > 0 && len(interesting) == 0 {
 		recordFilteredHit(report, st.mu, status)
-		return resp.StatusCode, true, nil
+		return true, statusCode
 	}
-	confidence := computeConfidence(resp.StatusCode, title, len(respBody), words, lines, contentType, truncated, suspect)
 	if e.cfg.FilterTestLength && e.testLen > 0 && len(respBody) == e.testLen {
 		recordFilteredHit(report, st.mu, status)
-		return resp.StatusCode, true, nil
+		return true, statusCode
 	}
 	if e.cfg.FilterWrongStatus200 && isWrongStatus200(title, len(respBody)) {
 		recordFilteredHit(report, st.mu, status)
-		return resp.StatusCode, true, nil
+		return true, statusCode
 	}
-	if e.cfg.FilterWrongSubdomain && isWrongSubdomain(title, len(respBody), resp.StatusCode) {
+	if e.cfg.FilterWrongSubdomain && isWrongSubdomain(title, len(respBody), statusCode) {
 		recordFilteredHit(report, st.mu, status)
-		return resp.StatusCode, true, nil
+		return true, statusCode
 	}
 	if e.cfg.FilterPossible404 && strings.Contains(title, "404") {
 		recordFilteredHit(report, st.mu, status)
-		return resp.StatusCode, true, nil
+		return true, statusCode
 	}
 	if !e.filter.Allow(filter.Input{
-		StatusCode:  resp.StatusCode,
+		StatusCode:  statusCode,
 		Length:      len(respBody),
 		Body:        text,
 		ContentType: contentType,
@@ -670,20 +742,22 @@ func (e *Engine) processTask(ctx context.Context, task Task, report *Report, st 
 		TimeMS:      elapsedMS,
 	}) {
 		recordFilteredHit(report, st.mu, status)
-		return resp.StatusCode, true, nil
+		return true, statusCode
 	}
+	return false, statusCode
+}
 
-	moduleData := runModules(ctx, e.cfg, task, method, resp, respBody, contentType, words, lines)
+func (e *Engine) recordResult(task Task, report *Report, st *runState, statusCode int, status, contentType, redirectURL string, length, words, lines, elapsedMS int, truncated bool, confidence float64, interesting []string, moduleData map[string]map[string]any) {
 	st.mu.Lock()
 	report.StatusCount[status]++
 	position := len(report.Results) + 1
 	report.Results = append(report.Results, Result{
 		URL:         task.URL,
-		StatusCode:  resp.StatusCode,
+		StatusCode:  statusCode,
 		Status:      status,
 		ContentType: contentType,
 		RedirectURL: redirectURL,
-		Length:      len(respBody),
+		Length:      length,
 		Words:       words,
 		Lines:       lines,
 		TimeMS:      elapsedMS,
@@ -697,21 +771,6 @@ func (e *Engine) processTask(ctx context.Context, task Task, report *Report, st 
 		ModuleData:  moduleData,
 	})
 	st.mu.Unlock()
-	if e.cfg.DumpResponses {
-		dumpPath := e.cfg.DumpDir
-		if dumpPath == "" {
-			dumpPath = e.cfg.OutputBase + "_responses"
-		}
-		_ = dumpResponse(dumpPath, task.URL, method, resp.StatusCode, contentType, respBody)
-	}
-	st.totalHits.Add(1)
-	e.printResult(task, status, len(respBody), words)
-	if e.cfg.ReplayProxy != "" && e.cfg.ReplayOnMatch {
-		e.client.Replay(ctx, spec, e.cfg.ReplayProxy)
-	}
-	// When e.cfg.StopOnErrors && status == statusCountError, caller handles stop after status count.
-	urlsToEnqueue = extractURLsFromModuleData(moduleData, e.cfg.ModuleConfig.EnqueueModuleUrls)
-	return resp.StatusCode, true, urlsToEnqueue
 }
 
 func extractURLsFromModuleData(moduleData map[string]map[string]any, moduleNames string) []string {
@@ -739,8 +798,7 @@ func extractURLsFromModuleData(moduleData map[string]map[string]any, moduleNames
 	return out
 }
 
-func runModules(ctx context.Context, cfg *config.Config, task Task, method string, resp *http.Response, respBody []byte, contentType string, words, lines int) map[string]map[string]any {
-	analyzers := modules.Enabled(&cfg.ModuleConfig)
+func runModules(ctx context.Context, analyzers []modules.Analyzer, task Task, method string, resp *http.Response, text, contentType string, length, words, lines int) map[string]map[string]any {
 	if len(analyzers) == 0 {
 		return nil
 	}
@@ -753,9 +811,9 @@ func runModules(ctx context.Context, cfg *config.Config, task Task, method strin
 		Method:      method,
 		StatusCode:  resp.StatusCode,
 		Headers:     headerMap,
-		Body:        string(respBody),
+		Body:        text,
 		ContentType: contentType,
-		Length:      len(respBody),
+		Length:      length,
 		Words:       words,
 		Lines:       lines,
 	}
@@ -788,19 +846,19 @@ func (e *Engine) computeTestLength(ctx context.Context) (int, error) {
 	randWord := e.randomString(calibrationWordLen)
 	values := map[string]string{"FUZZ": randWord}
 	testURL, method, body, headers := e.buildTestRequestParts(values, randWord)
-	resp, err := e.client.Do(ctx, httpx.RequestSpec{
+	result, err := e.client.Do(ctx, httpx.RequestSpec{
 		URL:     testURL,
 		Method:  method,
 		Body:    body,
 		Headers: headers,
 	})
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("calibration request: %w", err)
 	}
-	defer resp.Body.Close()
-	bodyBytes, _, err := readBodyWithLimit(resp.Body, e.cfg.MaxResponseSize)
+	defer result.Resp.Body.Close()
+	bodyBytes, _, err := readBodyWithLimit(result.Resp.Body, config.EffectiveMaxResponseSize(e.cfg))
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("read calibration response: %w", err)
 	}
 	return len(bodyBytes), nil
 }
@@ -814,7 +872,7 @@ func (e *Engine) applyAutoCalibration(ctx context.Context) {
 		randWord := e.randomString(calibrationWordLen)
 		values := map[string]string{"FUZZ": randWord}
 		testURL, method, body, headers := e.buildTestRequestParts(values, randWord)
-		resp, err := e.client.Do(ctx, httpx.RequestSpec{
+		result, err := e.client.Do(ctx, httpx.RequestSpec{
 			URL:     testURL,
 			Method:  method,
 			Body:    body,
@@ -823,14 +881,15 @@ func (e *Engine) applyAutoCalibration(ctx context.Context) {
 		if err != nil {
 			continue
 		}
-		bodyBytes, _, err := readBodyWithLimit(resp.Body, e.cfg.MaxResponseSize)
-		_ = resp.Body.Close()
+		bodyBytes, _, err := readBodyWithLimit(result.Resp.Body, config.EffectiveMaxResponseSize(e.cfg))
+		_ = result.Resp.Body.Close()
 		if err != nil {
 			continue
 		}
 		length := len(bodyBytes)
-		words := len(strings.Fields(string(bodyBytes)))
-		lines := countLines(string(bodyBytes))
+		text := string(bodyBytes)
+		words := countWords(text)
+		lines := countLines(text)
 		addExactRange(&e.cfg.FilterLengthNot, length)
 		addExactRange(&e.cfg.FilterWordsNot, words)
 		addExactRange(&e.cfg.FilterLinesNot, lines)
@@ -841,7 +900,7 @@ func (e *Engine) randomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 	out := make([]byte, n)
 	for i := 0; i < n; i++ {
-		out[i] = letters[e.rand.Intn(len(letters))]
+		out[i] = letters[rand.IntN(len(letters))]
 	}
 	return string(out)
 }
@@ -928,14 +987,18 @@ func (e *Engine) writeAuditEntry(spec *httpx.RequestSpec, statusCode int, respHe
 	}
 	max := e.cfg.AuditMaxBodySize
 	reqBody := spec.Body
-	respBodyStr := string(respBody)
+	var respBodyStr string
 	if max > 0 {
 		if len(reqBody) > max {
 			reqBody = reqBody[:max] + "...[truncated]"
 		}
 		if len(respBody) > max {
 			respBodyStr = string(respBody[:max]) + "...[truncated]"
+		} else {
+			respBodyStr = string(respBody)
 		}
+	} else {
+		respBodyStr = string(respBody)
 	}
 	respHdr := headerMapFromHTTPHeader(respHeader)
 	entry := struct {

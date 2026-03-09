@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -33,9 +34,11 @@ func doLogin(ctx context.Context, client *httpx.Client, cfg *config.Config) erro
 	headers := make(map[string]string)
 	if cfg.LoginBody != "" {
 		body = cfg.LoginBody
-		if cfg.LoginContentType != "" {
-			headers["Content-Type"] = cfg.LoginContentType
+		ct := cfg.LoginContentType
+		if ct == "" {
+			ct = "application/x-www-form-urlencoded"
 		}
+		headers["Content-Type"] = ct
 	} else if cfg.LoginUser != "" || cfg.LoginPass != "" {
 		form := url.Values{}
 		form.Set("username", cfg.LoginUser)
@@ -54,14 +57,23 @@ func doLogin(ctx context.Context, client *httpx.Client, cfg *config.Config) erro
 		Body:    body,
 		Headers: headers,
 	}
-	resp, err := client.Do(ctx, spec)
+	result, err := client.Do(ctx, spec)
 	if err != nil {
-		return err
+		return fmt.Errorf("login request to %s: %w", cfg.LoginURL, err)
 	}
+	resp := result.Resp
 	defer func() {
 		_, _ = io.Copy(io.Discard, resp.Body)
 		_ = resp.Body.Close()
 	}()
+
+	// Check for authentication failure
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		return fmt.Errorf("login failed: received status %d", resp.StatusCode)
+	}
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("login request failed: received status %d", resp.StatusCode)
+	}
 
 	if cfg.RequestCookies == nil {
 		cfg.RequestCookies = make(map[string]string)

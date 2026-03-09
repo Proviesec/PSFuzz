@@ -6,6 +6,7 @@ import (
 )
 
 func TestAIAnalyzer_NoAPIKey(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "") // Explicitly unset for this test
 	// Without OPENAI_API_KEY, AI module returns skipped reason in Data (for report visibility)
 	in := Input{StatusCode: 200, Body: "test"}
 	out, err := AIAnalyzer{}.Analyze(context.Background(), in)

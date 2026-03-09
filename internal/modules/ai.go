@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	aiMaxBodyLen    = 3000
-	aiTimeout       = 15 * time.Second
+	aiMaxBodyLen       = 3000
+	aiTimeout          = 15 * time.Second
 	aiDefaultMaxTokens = 150
-	aiDefaultPrompt = "You are a cyber security expert. Context: HTTP status {{status}}, method {{method}}{{url_line}}. Do you see anything unusual on this page from a security perspective? (e.g. debug info, admin/login hints, error messages with internal details, suspicious patterns, or nothing notable.) Reply in one short sentence.\n\n--- Response Body ---\n\n{{body}}"
+	aiDefaultPrompt    = "You are a cyber security expert. Context: HTTP status {{status}}, method {{method}}{{url_line}}. Do you see anything unusual on this page from a security perspective? (e.g. debug info, admin/login hints, error messages with internal details, suspicious patterns, or nothing notable.) Reply in one short sentence.\n\n--- Response Body ---\n\n{{body}}"
 )
 
 // AIAnalyzer sends a truncated response body to an AI backend (openai, ollama, gemini) and returns a short verdict.
@@ -59,8 +59,12 @@ func (a AIAnalyzer) Analyze(ctx context.Context, in Input) (Output, error) {
 		return Output{Data: map[string]any{"skipped": "API key required but not set"}}, nil
 	}
 	body := in.Body
-	if len(body) > aiMaxBodyLen {
-		body = body[:aiMaxBodyLen] + "...[truncated]"
+	// Truncate at rune boundary to avoid invalid UTF-8
+	if len(body) > aiMaxBodyLen*4 {
+		body = body[:aiMaxBodyLen*4]
+	}
+	if runes := []rune(body); len(runes) > aiMaxBodyLen {
+		body = string(runes[:aiMaxBodyLen]) + "...[truncated]"
 	}
 	tpl := a.Prompt
 	if tpl == "" {
@@ -70,11 +74,13 @@ func (a AIAnalyzer) Analyze(ctx context.Context, in Input) (Output, error) {
 	if in.URL != "" {
 		urlLine = ", URL: " + in.URL
 	}
-	prompt := strings.ReplaceAll(tpl, "{{status}}", fmt.Sprintf("%d", in.StatusCode))
-	prompt = strings.ReplaceAll(prompt, "{{method}}", in.Method)
-	prompt = strings.ReplaceAll(prompt, "{{url}}", in.URL)
-	prompt = strings.ReplaceAll(prompt, "{{url_line}}", urlLine)
-	prompt = strings.ReplaceAll(prompt, "{{body}}", body)
+	prompt := strings.NewReplacer(
+		"{{status}}", fmt.Sprintf("%d", in.StatusCode),
+		"{{method}}", in.Method,
+		"{{url}}", in.URL,
+		"{{url_line}}", urlLine,
+		"{{body}}", body,
+	).Replace(tpl)
 
 	maxTokens := a.MaxTokens
 	if maxTokens <= 0 {

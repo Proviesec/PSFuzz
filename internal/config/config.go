@@ -456,11 +456,11 @@ func parseDelay(raw string) (time.Duration, time.Duration, error) {
 		parts := strings.SplitN(raw, "-", 2)
 		min, err := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, fmt.Errorf("parse delay min: %w", err)
 		}
 		max, err := strconv.ParseFloat(strings.TrimSpace(parts[1]), 64)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, fmt.Errorf("parse delay max: %w", err)
 		}
 		if max < min {
 			return 0, 0, fmt.Errorf("invalid delay range")
@@ -469,7 +469,7 @@ func parseDelay(raw string) (time.Duration, time.Duration, error) {
 	}
 	val, err := strconv.ParseFloat(raw, 64)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, fmt.Errorf("parse delay: %w", err)
 	}
 	d := time.Duration(val * float64(time.Second))
 	return d, d, nil

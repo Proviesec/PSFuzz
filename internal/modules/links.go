@@ -8,11 +8,7 @@ import (
 )
 
 // Regexes for HTML link attributes (capture group 1 = value; unquoted and single/double quoted).
-var (
-	hrefRe   = regexp.MustCompile(`(?i)\bhref\s*=\s*["']?([^"'\s>]+)`)
-	actionRe = regexp.MustCompile(`(?i)\baction\s*=\s*["']?([^"'\s>]+)`)
-	srcRe    = regexp.MustCompile(`(?i)\bsrc\s*=\s*["']?([^"'\s>]+)`)
-)
+var linkAttrRe = regexp.MustCompile(`(?i)\b(?:href|action|src)\s*=\s*["']?([^"'\s>]+)`)
 
 // LinksAnalyzer extracts links from HTML (href, action, src), resolves them against the request URL,
 // deduplicates and returns them in module output. Output is stored in report.ModuleData["links"]["urls"] ([]string).
@@ -46,7 +42,7 @@ func (LinksAnalyzer) Analyze(ctx context.Context, in Input) (Output, error) {
 
 	add := func(raw string) {
 		raw = strings.TrimSpace(raw)
-		if raw == "" || strings.HasPrefix(raw, "#") || strings.HasPrefix(strings.TrimLeft(raw, " \t"), "javascript:") {
+		if raw == "" || strings.HasPrefix(raw, "#") || strings.HasPrefix(strings.ToLower(raw), "javascript:") {
 			return
 		}
 		u, err := base.Parse(raw)
@@ -64,17 +60,7 @@ func (LinksAnalyzer) Analyze(ctx context.Context, in Input) (Output, error) {
 		urls = append(urls, norm)
 	}
 
-	for _, m := range hrefRe.FindAllStringSubmatch(body, -1) {
-		if len(m) > 1 {
-			add(m[1])
-		}
-	}
-	for _, m := range actionRe.FindAllStringSubmatch(body, -1) {
-		if len(m) > 1 {
-			add(m[1])
-		}
-	}
-	for _, m := range srcRe.FindAllStringSubmatch(body, -1) {
+	for _, m := range linkAttrRe.FindAllStringSubmatch(body, -1) {
 		if len(m) > 1 {
 			add(m[1])
 		}

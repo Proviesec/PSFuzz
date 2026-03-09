@@ -42,20 +42,20 @@ go vet ./...
 - `internal/httpx/httpx_test.go`
   - client creation, validateTarget (safe mode, allowed hosts, ctx)
   - Do() success and context cancellation
-- `internal/modules/modules_test.go`
+- `internal/modules/registry_test.go`
   - Run with empty/context-done, Enabled dedup and unknown skip
   - fingerprint (headers case-insensitive), CORS, AI without API key
 - `internal/output/output_test.go`
   - Write JSON with module_data (fingerprint, cors)
   - zero-request report (TXT), NDJSON
-  - Write HTML (title + table), CSV (header + row), FFUF-JSON (results + config.method)
+  - Write HTML (title + table), CSV (header + row), compat JSON (results + config.method)
   - unsupported format returns error
 
 ## Integration Check (manual)
 
 ```bash
 printf 'admin\nlogin\n' > /tmp/psfuzz_words.txt
-./psfuzz -u https://example.com -d /tmp/psfuzz_words.txt -c 5 -of json -o sample
+./psfuzz -u https://example.com -w /tmp/psfuzz_words.txt -c 5 -of json -o sample
 ```
 
 Validate outputs:
@@ -81,6 +81,17 @@ Optional environment variables:
 - `PSFUZZ_WORDLIST` – wordlist name (default: `fav`)
 
 Exit code 0 = all tests passed, 1 = one or more failed. Outputs are written under `paramtest_out/` (ignored by git). You can also run `make test-params` from the project root (after `make build`).
+
+## Benchmark: PSFuzz with 1000-word list (redirect on/off)
+
+The script `scripts/bench_redirect_1k.sh` runs PSFuzz with a 1000-entry wordlist (`bench/wordlist_1k.txt`), with redirect following on or off, **4 runs per variant**. It writes a summary and any stderr to `bench_out_1k/`. Requires `jq` in PATH.
+
+```bash
+go build -o psfuzz .
+./scripts/bench_redirect_1k.sh
+```
+
+Optional: `BENCH_TARGET=https://example.com` (default), `BENCH_OUT=./bench_out_1k`. Redirect following is off by default; the script runs both with and without `-r` for comparison.
 
 ## Recommended CI Steps
 

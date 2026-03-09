@@ -13,7 +13,7 @@ docker build -t psfuzz:latest .
 ### Run a Simple Scan
 
 ```bash
-docker run --rm psfuzz:latest -u https://example.com -d default -c 5
+docker run --rm psfuzz:latest -u https://example.com -w default -c 5
 ```
 
 ## Usage
@@ -40,7 +40,7 @@ docker run --rm \
   -v $(pwd)/wordlists:/app/wordlists:ro \
   psfuzz:latest \
   -u https://example.com \
-  -d /app/wordlists/custom.txt \
+  -w /app/wordlists/custom.txt \
   -c 5
 ```
 
@@ -53,7 +53,7 @@ docker run --rm \
   -v $(pwd)/output:/app/output \
   psfuzz:latest \
   -u https://example.com \
-  -d default \
+  -w default \
   -c 5 \
   -o /app/output/scan_results
 ```
@@ -181,7 +181,7 @@ docker run --rm \
   -v $(pwd)/output:/app/output \
   psfuzz:latest \
   -u https://example.com \
-  -d default \
+  -w default \
   -c 5 \
   -s \
   -o /app/output/example_scan
@@ -194,7 +194,7 @@ docker run --rm \
   -v $(pwd)/output:/app/output \
   psfuzz:latest \
   -u https://example.com \
-  -d default \
+  -w default \
   -c 10 \
   -fscn 404,403 \
   -fws \
@@ -209,7 +209,7 @@ docker run --rm \
   -v $(pwd)/output:/app/output \
   psfuzz:latest \
   -u https://example.com \
-  -d default \
+  -w default \
   -c 5 \
   -b \
   -btr \
@@ -222,7 +222,7 @@ docker run --rm \
 docker run --rm \
   psfuzz:latest \
   -u https://api.example.com \
-  -d default \
+  -w default \
   -rah "Authorization:Bearer token123" \
   -raa "CustomScanner/1.0" \
   -c 5
@@ -253,7 +253,10 @@ Remove images and containers:
 
 ```bash
 # Remove containers
-docker rm $(docker ps -a -q -f ancestor=psfuzz:latest)
+docker rm $(docker ps -a -q -f ancestor=psfuzz:latest) 2>/dev/null || echo "No containers to remove"
+
+# Or use xargs for safer handling
+docker ps -a -q -f ancestor=psfuzz:latest | xargs -r docker rm
 
 # Remove image
 docker rmi psfuzz:latest
@@ -288,7 +291,7 @@ If you encounter permission issues with mounted volumes:
 ```bash
 # Create output directory with correct permissions
 mkdir -p output
-chmod 777 output
+chmod 755 output  # Or 775 if group write access is needed
 
 # Or run with user mapping
 docker run --rm \
@@ -342,7 +345,7 @@ For additional security, mount wordlists as read-only:
 docker run --rm \
   -v $(pwd)/wordlists:/app/wordlists:ro \
   psfuzz:latest \
-  -u https://example.com -d /app/wordlists/custom.txt
+  -u https://example.com -w /app/wordlists/custom.txt
 ```
 
 ### Network Isolation

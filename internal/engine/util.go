@@ -14,18 +14,34 @@ import (
 	"github.com/Proviesec/PSFuzz/internal/config"
 )
 
-func extractTitle(body string) string {
-	lower := strings.ToLower(body)
-	start := strings.Index(lower, "<title>")
+func extractTitle(body, lowerBody string) string {
+	start := strings.Index(lowerBody, "<title>")
 	if start == -1 {
 		return ""
 	}
 	start += len("<title>")
-	end := strings.Index(lower[start:], "</title>")
+	end := strings.Index(lowerBody[start:], "</title>")
 	if end == -1 {
 		return ""
 	}
 	return strings.TrimSpace(body[start : start+end])
+}
+
+func countWords(s string) int {
+	n := 0
+	wasSpace := true
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case ' ', '\t', '\n', '\r', '\f', '\v':
+			wasSpace = true
+		default:
+			if wasSpace {
+				n++
+				wasSpace = false
+			}
+		}
+	}
+	return n
 }
 
 func countLines(body string) int {
@@ -53,12 +69,14 @@ func requestKey(url, method, body string, headers map[string]string) string {
 	_, _ = io.WriteString(h, body)
 	keys := make([]string, 0, len(headers))
 	for k := range headers {
-		keys = append(keys, strings.ToLower(k))
+		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	sort.Slice(keys, func(i, j int) bool {
+		return strings.ToLower(keys[i]) < strings.ToLower(keys[j])
+	})
 	for _, k := range keys {
 		_, _ = io.WriteString(h, "\n")
-		_, _ = io.WriteString(h, k)
+		_, _ = io.WriteString(h, strings.ToLower(k))
 		_, _ = io.WriteString(h, ":")
 		_, _ = io.WriteString(h, headers[k])
 	}
@@ -103,18 +121,17 @@ func computeConfidence(status int, title string, length int, words int, lines in
 	return score
 }
 
-func findInteresting(body string, needles []string) []string {
-	if len(needles) == 0 || body == "" {
+func findInteresting(lowerBody string, needles []string) []string {
+	if len(needles) == 0 || lowerBody == "" {
 		return nil
 	}
-	lower := strings.ToLower(body)
 	out := make([]string, 0, len(needles))
 	for _, n := range needles {
 		n = strings.TrimSpace(strings.ToLower(n))
 		if n == "" {
 			continue
 		}
-		if strings.Contains(lower, n) {
+		if strings.Contains(lowerBody, n) {
 			out = append(out, n)
 		}
 	}
@@ -167,8 +184,7 @@ func dumpResponse(dir, url, method string, status int, contentType string, body 
 	return os.WriteFile(metaPath, b, 0644)
 }
 
-func isWAFSuspect(headers http.Header, body string) bool {
-	lowerBody := strings.ToLower(body)
+func isWAFSuspect(headers http.Header, lowerBody string) bool {
 	suspectBodies := []string{
 		"access denied", "request blocked", "forbidden", "captcha", "attention required",
 		"security check", "ddos protection", "temporarily blocked",
@@ -207,8 +223,14 @@ func isWrongStatus200(title string, length int) bool {
 	return length <= 1
 }
 
+// isWrongSubdomain detects common CDN/DNS error pages that return 200 but indicate a dead or misconfigured subdomain.
+// Body lengths: 21 = Cloudflare "error" stub, 180 = generic CDN "host not configured" page.
 func isWrongSubdomain(title string, length int, statusCode int) bool {
-	return length == 21 || length == 180 || strings.Contains(title, "Origin DNS error") || statusCode == http.StatusPermanentRedirect
+	const (
+		cloudflareErrorStubLen = 21
+		cdnHostNotConfiguredLen = 180
+	)
+	return length == cloudflareErrorStubLen || length == cdnHostNotConfiguredLen || strings.Contains(title, "Origin DNS error") || statusCode == http.StatusPermanentRedirect
 }
 
 // headerMapFromHTTPHeader copies non-empty headers from h into a map[string]string.

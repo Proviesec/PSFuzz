@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -119,6 +120,60 @@ func TestValidateTarget_MissingHost(t *testing.T) {
 	}
 }
 
+func TestValidateTarget_RejectsNonHTTPScheme(t *testing.T) {
+	cfg := &config.Config{Timeout: 5 * time.Second, SafeMode: false}
+	c, err := New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, u := range []string{"file:///etc/passwd", "javascript:alert(1)", "data:text/plain,hello", "ftp://example.com/"} {
+		err := c.validateTarget(context.Background(), u)
+		if err == nil {
+			t.Errorf("expected error for scheme in %q", u)
+		}
+		if err != nil && !strings.Contains(err.Error(), "not allowed") {
+			t.Errorf("expected 'not allowed' in error for %q: %v", u, err)
+		}
+	}
+}
+
+func TestDo_RedirectToPrivateIPRejected(t *testing.T) {
+	// Server redirects to 127.0.0.1; with SafeMode we must reject the redirect target.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "http://127.0.0.1/secret", http.StatusFound)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	}))
+	defer ts.Close()
+
+	cfg := &config.Config{
+		Timeout:                5 * time.Second,
+		RequestMethod:          "GET",
+		RequestHeaders:         map[string]string{},
+		RequestCookies:         map[string]string{},
+		SafeMode:               true,
+		FollowRedirects:        true,
+		RetryCount:             0,
+		BypassTooManyRequests:  false,
+	}
+	c, err := New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.Do(context.Background(), RequestSpec{URL: ts.URL, Method: http.MethodGet})
+	if err == nil {
+		t.Fatal("expected error when redirect targets private IP in safe mode")
+	}
+	if !strings.Contains(err.Error(), "redirect target") && !strings.Contains(err.Error(), "blocked") && !strings.Contains(err.Error(), "127.0.0.1") {
+		t.Errorf("expected redirect or safe-mode error, got: %v", err)
+	}
+}
+
 func TestDo_Success(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -145,9 +200,9 @@ func TestDo_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Do failed: %v", err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("expected 200, got %d", resp.StatusCode)
+	defer resp.Resp.Body.Close()
+	if resp.Resp.StatusCode != http.StatusOK {
+		t.Errorf("expected 200, got %d", resp.Resp.StatusCode)
 	}
 }
 
@@ -184,12 +239,19 @@ func TestDo_ContextCancel(t *testing.T) {
 	}
 }
 
-func TestRandomUserAgent_NilRand(t *testing.T) {
-	ua := randomUserAgent(nil)
+func TestRandomUserAgent(t *testing.T) {
+	ua := randomUserAgent()
 	if ua == "" {
-		t.Error("expected default user agent")
+		t.Error("expected non-empty user agent")
 	}
-	if ua != "PSFuzz/1.0.0" {
-		t.Errorf("expected PSFuzz/1.0.0, got %s", ua)
+	found := false
+	for _, candidate := range defaultUserAgents {
+		if ua == candidate {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("randomUserAgent returned unknown UA: %s", ua)
 	}
 }

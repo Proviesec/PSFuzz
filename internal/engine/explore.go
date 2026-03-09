@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -173,19 +172,24 @@ func RunExploreAI(ctx context.Context, cfg *config.Config) (*ExploreAIResult, er
 	}
 
 	spec := httpx.RequestSpec{URL: probeURL, Method: "GET", Headers: cfg.RequestHeaders}
-	resp, err := client.Do(ctx, spec)
+	doResult, err := client.Do(ctx, spec)
 	if err != nil {
 		return nil, fmt.Errorf("probe request: %w", err)
 	}
-	respBody, _ := io.ReadAll(resp.Body)
+	resp := doResult.Resp
+	const exploreMaxResponseSize = 1 << 20
+	respBody, _, err := readBodyWithLimit(resp.Body, exploreMaxResponseSize)
 	_ = resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("read probe response: %w", err)
+	}
 
 	headerMap := headerMapFromHTTPHeader(resp.Header)
 	bodyStr := string(respBody)
 	if len(bodyStr) > exploreAIMaxBody {
 		bodyStr = bodyStr[:exploreAIMaxBody] + "...[truncated]"
 	}
-	words := len(strings.Fields(bodyStr))
+	words := countWords(bodyStr)
 	lines := strings.Count(bodyStr, "\n") + 1
 	contentType := resp.Header.Get("Content-Type")
 
@@ -368,12 +372,18 @@ func MergeWordlistURLs(ctx context.Context, urls []string) (tmpPath string, err 
 	if err != nil {
 		return "", err
 	}
+	bw := bufio.NewWriter(f)
 	for _, w := range merged {
-		if _, err := fmt.Fprintln(f, w); err != nil {
+		if _, err := fmt.Fprintln(bw, w); err != nil {
 			f.Close()
 			os.Remove(f.Name())
 			return "", err
 		}
+	}
+	if err := bw.Flush(); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return "", err
 	}
 	if err := f.Close(); err != nil {
 		os.Remove(f.Name())

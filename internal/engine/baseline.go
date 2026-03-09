@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/Proviesec/PSFuzz/internal/config"
 	"github.com/Proviesec/PSFuzz/internal/httpx"
 )
 
@@ -42,7 +43,7 @@ func (e *Engine) ensureBaseline(ctx context.Context, host string, task Task, st 
 		Headers: task.Headers,
 	}
 	method, body, headers := e.requestPartsFor(baseTask)
-	resp, err := e.client.Do(ctx, httpx.RequestSpec{
+	result, err := e.client.Do(ctx, httpx.RequestSpec{
 		URL:     baseURL,
 		Method:  method,
 		Body:    body,
@@ -50,18 +51,24 @@ func (e *Engine) ensureBaseline(ctx context.Context, host string, task Task, st 
 	})
 	st.totalReq.Add(1)
 	if err != nil {
+		st.mu.Lock()
+		delete(st.baselines, host)
+		st.mu.Unlock()
 		return baselineFingerprint{}
 	}
-	defer resp.Body.Close()
-	data, _, err := readBodyWithLimit(resp.Body, e.cfg.MaxResponseSize)
+	defer result.Resp.Body.Close()
+	data, _, err := readBodyWithLimit(result.Resp.Body, config.EffectiveMaxResponseSize(e.cfg))
 	if err != nil {
+		st.mu.Lock()
+		delete(st.baselines, host)
+		st.mu.Unlock()
 		return baselineFingerprint{}
 	}
 	text := string(data)
-	words := len(strings.Fields(text))
+	words := countWords(text)
 	lines := countLines(text)
 	b := baselineFingerprint{
-		Status: resp.StatusCode,
+		Status: result.Resp.StatusCode,
 		Length: len(data),
 		Words:  words,
 		Lines:  lines,

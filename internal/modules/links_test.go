@@ -19,8 +19,8 @@ func TestLinksAnalyzer_ExtractsHrefActionSrc(t *testing.T) {
 		t.Fatal("expected non-nil data")
 	}
 	urls, ok := out.Data["urls"].([]string)
-	if !ok || len(urls) < 2 {
-		t.Errorf("expected at least 2 URLs, got %v", out.Data["urls"])
+	if !ok || len(urls) < 4 {
+		t.Errorf("expected at least 4 URLs, got %v", out.Data["urls"])
 	}
 	found := make(map[string]bool)
 	for _, u := range urls {

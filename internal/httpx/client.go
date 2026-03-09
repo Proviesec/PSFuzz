@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"math/rand"
+	"math/rand/v2"
 	"net"
 	"net/http"
 	"net/netip"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/Proviesec/PSFuzz/internal/config"
@@ -23,11 +24,10 @@ import (
 type Client struct {
 	cfg    *config.Config
 	http   *http.Client
-	rand   *rand.Rand
 	tick   <-chan time.Time
 	ticker *time.Ticker // so Close() can Stop() it; only set when ThrottleRPS > 0
 	scope  map[string]struct{}
-	scale  float64
+	scale  atomic.Uint64 // stores float64 via math.Float64bits/Float64frombits; avoids data race between SetScale and Do
 }
 
 type RequestSpec struct {
@@ -38,9 +38,16 @@ type RequestSpec struct {
 	Delay   time.Duration
 }
 
-// Doer performs HTTP requests. *Client implements Doer; use this interface in callers that need to mock or swap the client.
+// DoResult holds the HTTP response and the final URL after following redirects (when FollowRedirects is true).
+// FinalURL is the URL that produced Resp; if redirects were followed, it differs from the initial request URL.
+type DoResult struct {
+	Resp     *http.Response
+	FinalURL string
+}
+
+// Doer performs HTTP requests. *Client implements Doer.
 type Doer interface {
-	Do(ctx context.Context, spec RequestSpec) (*http.Response, error)
+	Do(ctx context.Context, spec RequestSpec) (*DoResult, error)
 }
 
 // New builds an HTTP client from cfg. Returns an error if cfg is nil (callers can handle instead of panic).
@@ -48,7 +55,11 @@ func New(cfg *config.Config) (*Client, error) {
 	if cfg == nil {
 		return nil, errors.New("config must not be nil")
 	}
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	dt, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil, errors.New("http.DefaultTransport is not *http.Transport")
+	}
+	transport := dt.Clone()
 	if cfg.Proxy != "" {
 		proxyStr := cfg.Proxy
 		if cfg.ProxyUser != "" && !strings.Contains(proxyStr, "@") {
@@ -74,12 +85,12 @@ func New(cfg *config.Config) (*Client, error) {
 		_ = http2.ConfigureTransport(transport)
 	}
 	h := &http.Client{Timeout: cfg.Timeout, Transport: transport}
-	if !cfg.FollowRedirects {
-		h.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		}
+	// Never follow redirects in the std client; we do the redirect loop in Do() so we can track FinalURL.
+	h.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
 	}
-	c := &Client{cfg: cfg, http: h, rand: rand.New(rand.NewSource(time.Now().UnixNano())), scale: 1.0}
+	c := &Client{cfg: cfg, http: h}
+	c.scale.Store(math.Float64bits(1.0))
 	if cfg.ThrottleRPS > 0 {
 		c.ticker = time.NewTicker(time.Second / time.Duration(cfg.ThrottleRPS))
 		c.tick = c.ticker.C
@@ -102,29 +113,33 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) Do(ctx context.Context, spec RequestSpec) (*http.Response, error) {
+func (c *Client) Do(ctx context.Context, spec RequestSpec) (*DoResult, error) {
 	if c.cfg.DelayMax > 0 {
 		delay := c.cfg.DelayMin
 		if c.cfg.DelayMax > c.cfg.DelayMin {
-			jitter := c.rand.Float64()
+			jitter := rand.Float64()
 			delay = c.cfg.DelayMin + time.Duration(jitter*float64(c.cfg.DelayMax-c.cfg.DelayMin))
 		}
-		if c.scale > 1.0 {
-			delay = time.Duration(float64(delay) * c.scale)
+		if s := c.loadScale(); s > 1.0 {
+			delay = time.Duration(float64(delay) * s)
 		}
 		if spec.Delay > 0 {
 			delay += spec.Delay
 		}
+		t := time.NewTimer(delay)
 		select {
 		case <-ctx.Done():
+			t.Stop()
 			return nil, ctx.Err()
-		case <-time.After(delay):
+		case <-t.C:
 		}
 	} else if spec.Delay > 0 {
+		t := time.NewTimer(spec.Delay)
 		select {
 		case <-ctx.Done():
+			t.Stop()
 			return nil, ctx.Err()
-		case <-time.After(spec.Delay):
+		case <-t.C:
 		}
 	}
 	if c.tick != nil {
@@ -138,15 +153,16 @@ func (c *Client) Do(ctx context.Context, spec RequestSpec) (*http.Response, erro
 		return nil, fmt.Errorf("validate target: %w", err)
 	}
 
+	const maxRedirects = 10
 	var lastErr error
 	for attempt := 0; attempt <= c.cfg.RetryCount; attempt++ {
-		resp, err := c.doOnce(ctx, spec)
-		if err == nil && !isRetryStatus(resp.StatusCode, c.cfg.BypassTooManyRequests) {
-			return resp, nil
+		result, err := c.doWithRedirects(ctx, spec, maxRedirects)
+		if err == nil && result != nil && !isRetryStatus(result.Resp.StatusCode, c.cfg.BypassTooManyRequests) {
+			return result, nil
 		}
-		if err == nil && isRetryStatus(resp.StatusCode, c.cfg.BypassTooManyRequests) {
-			_ = resp.Body.Close()
-			lastErr = fmt.Errorf("retryable status %d", resp.StatusCode)
+		if err == nil && result != nil && isRetryStatus(result.Resp.StatusCode, c.cfg.BypassTooManyRequests) {
+			_ = result.Resp.Body.Close()
+			lastErr = fmt.Errorf("retryable status %d", result.Resp.StatusCode)
 		} else {
 			lastErr = err
 		}
@@ -154,20 +170,60 @@ func (c *Client) Do(ctx context.Context, spec RequestSpec) (*http.Response, erro
 			break
 		}
 		backoff := c.backoff(attempt)
+		bt := time.NewTimer(backoff)
 		select {
 		case <-ctx.Done():
+			bt.Stop()
 			return nil, ctx.Err()
-		case <-time.After(backoff):
+		case <-bt.C:
 		}
 	}
-	return nil, fmt.Errorf("request after %d retries: %w", c.cfg.RetryCount+1, lastErr)
+	return nil, fmt.Errorf("request failed after %d attempts: %w", c.cfg.RetryCount+1, lastErr)
+}
+
+// doWithRedirects runs doOnce and, when FollowRedirects is true, follows 3xx up to maxRedirects; returns the final response and its URL.
+func (c *Client) doWithRedirects(ctx context.Context, spec RequestSpec, maxRedirects int) (*DoResult, error) {
+	currentURL := spec.URL
+	for i := 0; i <= maxRedirects; i++ {
+		spec.URL = currentURL
+		resp, err := c.doOnce(ctx, spec)
+		if err != nil {
+			return nil, err
+		}
+		if !c.cfg.FollowRedirects || resp.StatusCode < 300 || resp.StatusCode >= 400 {
+			return &DoResult{Resp: resp, FinalURL: currentURL}, nil
+		}
+		loc := resp.Header.Get("Location")
+		if loc == "" {
+			return &DoResult{Resp: resp, FinalURL: currentURL}, nil
+		}
+		_, _ = io.Copy(io.Discard, resp.Body)
+		_ = resp.Body.Close()
+		base, err := url.Parse(currentURL)
+		if err != nil {
+			return nil, fmt.Errorf("parse current URL: %w", err)
+		}
+		next, err := base.Parse(loc)
+		if err != nil {
+			return nil, fmt.Errorf("parse Location %q: %w", loc, err)
+		}
+		currentURL = next.String()
+		if err := c.validateTarget(ctx, currentURL); err != nil {
+			return nil, fmt.Errorf("redirect target not allowed: %w", err)
+		}
+	}
+	return nil, fmt.Errorf("too many redirects")
 }
 
 func (c *Client) SetScale(scale float64) {
 	if scale < 1.0 {
 		scale = 1.0
 	}
-	c.scale = scale
+	c.scale.Store(math.Float64bits(scale))
+}
+
+func (c *Client) loadScale() float64 {
+	return math.Float64frombits(c.scale.Load())
 }
 
 func (c *Client) Replay(ctx context.Context, spec RequestSpec, proxyURL string) {
@@ -193,12 +249,14 @@ func (c *Client) Replay(ctx context.Context, spec RequestSpec, proxyURL string) 
 	}
 	resp, err := client.Do(req)
 	if err != nil {
+		transport.CloseIdleConnections()
 		return
 	}
 	if resp != nil && resp.Body != nil {
 		_, _ = io.Copy(io.Discard, resp.Body)
 		_ = resp.Body.Close()
 	}
+	transport.CloseIdleConnections()
 }
 
 func dialSOCKS5(ctx context.Context, proxyURL *url.URL, network, addr string, user, pass string) (net.Conn, error) {
@@ -380,7 +438,7 @@ func (c *Client) doOnce(ctx context.Context, spec RequestSpec) (*http.Response, 
 		req.Header.Set(k, v)
 	}
 	if c.cfg.RandomUserAgent {
-		req.Header.Set("User-Agent", randomUserAgent(c.rand))
+		req.Header.Set("User-Agent", randomUserAgent())
 	} else if c.cfg.RequestUserAgent != "" {
 		req.Header.Set("User-Agent", c.cfg.RequestUserAgent)
 	}
@@ -397,6 +455,10 @@ func (c *Client) validateTarget(ctx context.Context, rawURL string) error {
 	u, err := url.Parse(rawURL)
 	if err != nil {
 		return err
+	}
+	scheme := strings.ToLower(u.Scheme)
+	if scheme != "" && scheme != "http" && scheme != "https" {
+		return fmt.Errorf("scheme %q not allowed (only http/https)", scheme)
 	}
 	host := strings.ToLower(u.Hostname())
 	if host == "" {
@@ -421,7 +483,7 @@ func (c *Client) validateTarget(ctx context.Context, rawURL string) error {
 	}
 	ips, err := net.DefaultResolver.LookupNetIP(ctx, "ip", host)
 	if err != nil {
-		return nil
+		return fmt.Errorf("safe mode: DNS lookup failed for %s: %w", host, err)
 	}
 	for _, ip := range ips {
 		if blockedIP(ip) {
@@ -445,24 +507,22 @@ func isRetryStatus(code int, retry429 bool) bool {
 func (c *Client) backoff(attempt int) time.Duration {
 	base := float64(c.cfg.RetryBackoff)
 	pow := math.Pow(2, float64(attempt))
-	jitter := 0.8 + c.rand.Float64()*0.4
+	jitter := 0.8 + rand.Float64()*0.4
 	return time.Duration(base * pow * jitter)
 }
 
-func randomUserAgent(r *rand.Rand) string {
-	if r == nil {
-		return "PSFuzz/1.0.0"
-	}
-	uas := []string{
-		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0 Safari/537.36",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
-		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-		"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 13.4; rv:121.0) Gecko/20100101 Firefox/121.0",
-		"Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-		"Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36",
-		"curl/8.5.0",
-		"Wget/1.21.4",
-	}
-	return uas[r.Intn(len(uas))]
+var defaultUserAgents = [...]string{
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0 Safari/537.36",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 13.4; rv:121.0) Gecko/20100101 Firefox/121.0",
+	"Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+	"Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36",
+	"curl/8.5.0",
+	"Wget/1.21.4",
+}
+
+func randomUserAgent() string {
+	return defaultUserAgents[rand.IntN(len(defaultUserAgents))]
 }

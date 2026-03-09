@@ -154,10 +154,16 @@ func nextAlias(last string) string {
 	if last == "" {
 		return "a"
 	}
-	if last[len(last)-1] == 'z' {
-		return last[:len(last)-1] + "aa"
+	// Increment like base-26 with carry
+	runes := []rune(last)
+	for i := len(runes) - 1; i >= 0; i-- {
+		if runes[i] < 'z' {
+			runes[i]++
+			return string(runes)
+		}
+		runes[i] = 'a'
 	}
-	return last[:len(last)-1] + string(last[len(last)-1]+1)
+	return "a" + string(runes)
 }
 
 // ParseWordlistSpecs parses a comma-separated list of wordlist specs. Each spec may be "path" or "path:keyword".

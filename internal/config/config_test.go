@@ -43,6 +43,26 @@ func TestParseRanges(t *testing.T) {
 	}
 }
 
+func TestDefaultMatcherIncludes500And405(t *testing.T) {
+	cfg, err := Load([]string{"-u", "https://example.com/FUZZ", "-w", "default"})
+	if err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+	if len(cfg.FilterStatus) == 0 {
+		t.Fatal("default FilterStatus should be set")
+	}
+	if !MatchAnyRange(cfg.FilterStatus, 500) {
+		t.Error("default matcher should include 500")
+	}
+	if !MatchAnyRange(cfg.FilterStatus, 405) {
+		t.Error("default matcher should include 405")
+	}
+	// Default match set includes full 2xx range
+	if !MatchAnyRange(cfg.FilterStatus, 201) || !MatchAnyRange(cfg.FilterStatus, 206) || !MatchAnyRange(cfg.FilterStatus, 299) {
+		t.Error("default matcher should include 200-299")
+	}
+}
+
 func TestLegacyFlagsAreAccepted(t *testing.T) {
 	cfg, err := Load([]string{
 		"-u", "example.com",
@@ -71,7 +91,7 @@ func TestLegacyFlagsAreAccepted(t *testing.T) {
 	}
 }
 
-func TestFfufAliases(t *testing.T) {
+func TestCLIAliases(t *testing.T) {
 	cfg, err := Load([]string{
 		"-u", "example.com",
 		"-mc", "200,301",

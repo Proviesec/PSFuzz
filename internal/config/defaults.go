@@ -18,11 +18,11 @@ func defaultConfig() *Config {
 		MaxResponseSize:         0,
 		MinResponseSize:         0,
 		SaveConfigPath:          "",
-		Concurrency:             10,
+		Concurrency:             40,
 		Depth:                   0,
 		RecursionSmart:          true,
 		RecursionStatus:         []StatusRange{{Min: 200, Max: 200}, {Min: 301, Max: 302}, {Min: 403, Max: 403}},
-		FollowRedirects:         true,
+		FollowRedirects:         false,
 		OutputBase:              "output",
 		OutputFormat:            "txt",
 		Timeout:                 30 * time.Second,
@@ -51,7 +51,7 @@ func defaultConfig() *Config {
 		AutoCalibrateN:          2,
 		RequestHeaders:          map[string]string{},
 		RequestCookies:          map[string]string{},
-		RequestUserAgent:        "PSFuzz/1.0.0",
+		RequestUserAgent:        "PSFuzz/" + Version,
 		RandomUserAgent:         false,
 		RandomizeWordlistCase:   "",
 		RequestMethod:           "",
@@ -116,15 +116,16 @@ func defaultConfig() *Config {
 	}
 }
 
-// defaultMatcher returns the default status code filter (200, 204, 301-302, 307, 401, 403).
+// defaultMatcher returns the default status code filter (match set): 200-299, 301, 302, 307, 401, 403, 405, 500.
 func defaultMatcher() []StatusRange {
 	return []StatusRange{
-		{Min: 200, Max: 200},
-		{Min: 204, Max: 204},
+		{Min: 200, Max: 299}, // 2xx
 		{Min: 301, Max: 302},
 		{Min: 307, Max: 307},
 		{Min: 401, Max: 401},
 		{Min: 403, Max: 403},
+		{Min: 405, Max: 405},
+		{Min: 500, Max: 500},
 	}
 }
 

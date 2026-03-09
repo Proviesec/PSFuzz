@@ -71,15 +71,15 @@ func (HeadersAnalyzer) Analyze(ctx context.Context, in Input) (Output, error) {
 	}
 
 	data := map[string]any{
-		"content_security_policy":     csp,
-		"x_frame_options":             xfo,
-		"strict_transport_security":   hsts,
-		"x_content_type_options":     xcto,
-		"missing_headers":             missing,
-		"weak_headers":                weak,
-		"set_cookie_present":          setCookie != "",
-		"cookie_has_secure":           cookieSecure,
-		"cookie_has_httponly":         cookieHTTPOnly,
+		"content_security_policy":   csp,
+		"x_frame_options":           xfo,
+		"strict_transport_security": hsts,
+		"x_content_type_options":    xcto,
+		"missing_headers":           missing,
+		"weak_headers":              weak,
+		"set_cookie_present":        setCookie != "",
+		"cookie_has_secure":         cookieSecure,
+		"cookie_has_httponly":       cookieHTTPOnly,
 	}
 	// Short summary for TXT/CSV: "missing=X,Y; weak=Z" or "ok"
 	if len(missing) > 0 || len(weak) > 0 || !cookieSecure || !cookieHTTPOnly {
@@ -90,15 +90,24 @@ func (HeadersAnalyzer) Analyze(ctx context.Context, in Input) (Output, error) {
 
 func isWeakCSP(csp string) bool {
 	cspLower := strings.ToLower(strings.TrimSpace(csp))
-	return strings.Contains(cspLower, "unsafe-inline") ||
-		strings.Contains(cspLower, "unsafe-eval") ||
-		strings.Contains(cspLower, "*")
+	if strings.Contains(cspLower, "unsafe-inline") || strings.Contains(cspLower, "unsafe-eval") {
+		return true
+	}
+	// Check for standalone wildcard (e.g., "script-src *" or "default-src *")
+	// but not subdomain patterns like "*.example.com"
+	for _, part := range strings.Fields(cspLower) {
+		if part == "*" {
+			return true
+		}
+	}
+	return false
 }
 
 func hasCookieFlag(cookieValue, flag string) bool {
+	flagLower := strings.ToLower(flag)
 	parts := strings.Split(strings.TrimSpace(cookieValue), ";")
 	for _, p := range parts[1:] {
-		if strings.TrimSpace(strings.ToLower(p)) == strings.ToLower(flag) {
+		if strings.TrimSpace(strings.ToLower(p)) == flagLower {
 			return true
 		}
 	}

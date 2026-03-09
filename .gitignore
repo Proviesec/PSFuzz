@@ -52,6 +52,11 @@ test_*.txt
 *_test.txt
 paramtest_out/
 
+# Comparison / benchmark output (local)
+comparison/
+bench_out/
+bench_out_1k/
+
 # Coverage files
 coverage.out
 coverage.html
@@ -121,3 +126,9 @@ $RECYCLE.BIN/
 *.bak
 *.orig
 
+# Local docs (keep locally, do not commit/push)
+TOOL_COMPARISON.md
+TRYHACKME_ROOM.md
+MEDIUM_ARTICLE.md
+FUZZING_GUIDES.md
+scripts/

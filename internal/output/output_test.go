@@ -16,9 +16,9 @@ func TestWriteJSONWithModuleData(t *testing.T) {
 	base := filepath.Join(dir, "scan")
 	cfg := &config.Config{OutputBase: base, OutputFormat: "json"}
 	report := &engine.Report{
-		TargetURL:      "https://example.com",
-		TotalRequests:  1,
-		StatusCount:    map[string]int{"200": 1},
+		TargetURL:     "https://example.com",
+		TotalRequests: 1,
+		StatusCount:   map[string]int{"200": 1},
 		Results: []engine.Result{
 			{
 				URL: "https://example.com/admin", StatusCode: 200, Status: "200",
@@ -136,10 +136,10 @@ func TestWriteCSV(t *testing.T) {
 	}
 }
 
-func TestWriteFFUFJSON(t *testing.T) {
+func TestWrite(t *testing.T) {
 	dir := t.TempDir()
 	base := filepath.Join(dir, "scan")
-	cfg := &config.Config{OutputBase: base, OutputFormat: "ffufjson", RequestMethod: "GET"}
+	cfg := &config.Config{OutputBase: base, OutputFormat: "compatjson", RequestMethod: "GET"}
 	report := &engine.Report{
 		TargetURL:     "https://example.com",
 		TotalRequests: 1,
@@ -164,13 +164,58 @@ func TestWriteFFUFJSON(t *testing.T) {
 		} `json:"config"`
 	}
 	if err := json.Unmarshal(data, &decoded); err != nil {
-		t.Fatalf("invalid ffuf json: %v", err)
+		t.Fatalf("invalid compat json: %v", err)
 	}
 	if len(decoded.Results) != 1 || decoded.Results[0].URL != "https://example.com/admin" || decoded.Results[0].Status != 200 {
 		t.Errorf("unexpected results: %+v", decoded.Results)
 	}
 	if decoded.Config.Method != "GET" {
 		t.Errorf("config.method: got %q", decoded.Config.Method)
+	}
+}
+
+func TestWriteCSV_SpecialCharacters(t *testing.T) {
+	dir := t.TempDir()
+	base := filepath.Join(dir, "scan")
+	cfg := &config.Config{OutputBase: base, OutputFormat: "csv"}
+	report := &engine.Report{
+		TargetURL:     "https://example.com",
+		TotalRequests: 2,
+		Results: []engine.Result{
+			{
+				URL:         `https://example.com/path?a=1&b=2`,
+				StatusCode:  200,
+				Status:      "200 OK",
+				ContentType: `text/html; charset="utf-8"`,
+				RedirectURL: "",
+			},
+			{
+				URL:         "https://example.com/with,comma",
+				StatusCode:  301,
+				Status:      "301 Moved",
+				ContentType: "text/html",
+				RedirectURL: "https://example.com/new,location",
+				Interesting: []string{"admin|panel"},
+			},
+		},
+	}
+	if err := Write(cfg, report); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(base + ".csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	lines := strings.Split(strings.TrimSpace(content), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 CSV lines (header + 2 rows), got %d", len(lines))
+	}
+	if !strings.Contains(content, `"https://example.com/with,comma"`) {
+		t.Error("URL with comma should be quoted in CSV")
+	}
+	if !strings.Contains(content, `"text/html; charset=""utf-8"""`) {
+		t.Error("content-type with quotes should be properly escaped in CSV")
 	}
 }
 

@@ -21,8 +21,13 @@ func shouldRecurse(taskURL string, depth int, statusCode int, cfg *config.Config
 	if err != nil {
 		return "", false
 	}
-	if strings.Contains(u.Path, ".") {
-		return "", false
+	// Check if the last path segment looks like a file (has extension)
+	segments := strings.Split(strings.Trim(u.Path, "/"), "/")
+	if len(segments) > 0 {
+		lastSegment := segments[len(segments)-1]
+		if strings.Contains(lastSegment, ".") {
+			return "", false
+		}
 	}
 	base := strings.TrimSuffix(taskURL, "/") + "/"
 	return base, true
@@ -96,7 +101,13 @@ func bypassVariants(rawURL string) []Task {
 		}
 		queryVariants := []string{"?debug=true", "?admin=true", "?bypass=1", "?_=%00", "?_=" + time.Now().Format("150405")}
 		for _, q := range queryVariants {
-			out = append(out, Task{URL: rawURL + q})
+			appendURL := rawURL
+			if u.RawQuery != "" {
+				appendURL = rawURL + "&" + strings.TrimPrefix(q, "?")
+			} else {
+				appendURL = rawURL + q
+			}
+			out = append(out, Task{URL: appendURL})
 		}
 		headerVariants := []map[string]string{
 			{"X-Original-URL": path},

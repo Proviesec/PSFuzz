@@ -66,7 +66,9 @@ To add a new module (e.g. a response analyzer that runs on every match): see **[
 **Go Code Style:**
 - Follow [Effective Go](https://golang.org/doc/effective_go.html)
 - Run `go fmt` before committing
-- Use meaningful variable and function names (camelCase)
+- Use meaningful variable and function names
+  - Exported identifiers: PascalCase (e.g., `BuildTestURL`)
+  - Unexported identifiers: camelCase (e.g., `buildTestURL`)
 - Add comments for exported functions
 - Keep functions small and focused (< 50 lines ideal)
 
@@ -105,7 +107,7 @@ Bad:
    ```bash
    make build
    make test
-   ./psfuzz -u https://example.com -d default -c 5
+   ./psfuzz -u https://example.com -w default -c 5
    ```
 
 4. **Commit your changes**
@@ -127,7 +129,7 @@ Bad:
 
 ### Prerequisites
 
-- Go 1.16 or higher
+- Go 1.21 or higher (see `go.mod`)
 - Git
 
 ### Setup Steps
@@ -142,7 +144,7 @@ Bad:
    ```bash
    make build
    # or
-   go build -o psfuzz main.go
+   go build -o psfuzz .
    ```
 
 3. **Run tests**
@@ -152,7 +154,7 @@ Bad:
 
 4. **Test your changes**
    ```bash
-   ./psfuzz -u https://example.com -d default -c 2 -s
+   ./psfuzz -u https://example.com -w default -c 2 -s
    ```
 
 ## Project Structure
@@ -173,37 +175,16 @@ PSFuzz/
 
 ## Architecture Overview
 
-### v1.0.0 Architecture
+The codebase is organized into packages under `internal/`:
 
-**Core Components:**
+- **config** – CLI flags, config file load/save, validation
+- **engine** – scan orchestration, task queue, workers, recursion, report building
+- **httpx** – HTTP client with safe-mode, redirect validation, throttling
+- **filter** – response filtering (status, length, regex, duplicates)
+- **output** – write report in TXT, JSON, HTML, CSV, NDJSON, compat JSON
+- **modules** – response analyzers (fingerprint, cors, ai, links, etc.)
 
-1. **AppConfig**: Central configuration structure
-   - Holds all runtime settings
-   - Thread-safe access with mutexes
-   - Methods for all operations
-
-2. **Request Pipeline:**
-   ```
-   urlFuzzScanner() 
-     → loadOrGeneratePayload()
-     → scanAndFuzz()
-       → sendRequest()
-       → testURL()
-       → responseAnalyse()
-   ```
-
-3. **Thread Safety:**
-   - Use `cfg.Mutex` for shared state
-   - Implement `sync.WaitGroup` for goroutines
-   - Proper `defer` for resource cleanup
-
-**Key Principles:**
-
-- All functions are methods on `AppConfig`
-- No global mutable state
-- Proper error handling (no ignored errors)
-- Resource cleanup with `defer`
-- Type-safe flags (use `bool` not `string`)
+See [README.md](README.md#architecture) for the package list. When adding features, follow existing patterns (e.g. new modules in `internal/modules/`, new flags in config).
 
 ## Testing
 
@@ -211,34 +192,22 @@ PSFuzz/
 
 ```bash
 # Basic functionality
-./psfuzz -u https://example.com -d default
+./psfuzz -u https://example.com -w default
 
 # Concurrency test
-./psfuzz -u https://example.com -d default -c 10
+./psfuzz -u https://example.com -w default -c 10
 
 # Race detection
-go build -race -o psfuzz main.go
+go build -race -o psfuzz .
 ./psfuzz -u https://example.com -c 10
 
 # Filter testing
-./psfuzz -u https://example.com -fscn 404 -s
+./psfuzz -u https://example.com -fc 404 -s
 ```
 
 ### Adding Tests
 
-While PSFuzz doesn't currently have unit tests, contributions adding them are welcome!
-
-Example test structure:
-```go
-func TestAppConfig_buildTestURL(t *testing.T) {
-    cfg := &AppConfig{URL: "https://example.com/"}
-    result := cfg.buildTestURL("admin")
-    expected := "https://example.com/admin"
-    if result != expected {
-        t.Errorf("Expected %s, got %s", expected, result)
-    }
-}
-```
+PSFuzz has unit tests in `internal/*/**_test.go`. Run them with `go test ./...`. When adding features, add or extend tests in the relevant package. See [TESTING.md](TESTING.md) for the current test suites.
 
 ## Documentation
 

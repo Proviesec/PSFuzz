@@ -15,7 +15,7 @@ const (
 
 // Valid output format values for OutputFormat.
 var validOutputFormats = map[string]bool{
-	"txt": true, "json": true, "html": true, "csv": true, "ndjson": true, "ffufjson": true,
+	"txt": true, "json": true, "html": true, "csv": true, "ndjson": true, "compatjson": true,
 }
 
 // Config holds all PSFuzz options: target URLs, wordlist, filters, request settings, modules, and explore-AI options.

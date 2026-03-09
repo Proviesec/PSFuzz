@@ -10,27 +10,27 @@ CORE:
   -u, -url <url>                Target URL
   -list, -url-list <file|csv>   URL list file or csv
   -d, -dirlist <path|url|name>  Wordlist (default|fav|subdomain|path|url)
-  -w <path|url|name>            Wordlist (ffuf). Supports list:KEY
-  -e, -ext <exts>               Extensions (ffuf, comma-separated)
+  -w <path|url|name>            Wordlist. Supports list:KEY
+  -e, -ext <exts>               Extensions (comma-separated)
   -ext-defaults                 Add default extensions
   -mode, -input-mode <m>        Input mode: clusterbomb|pitchfork|sniper
   -wordlist-case <m>            Wordlist case: lower|upper
-  -enc <spec>                   Encoders (ffuf): KEYWORD:enc1,enc2 (e.g. FUZZ:urlencode)
-  -c, -concurrency <n>          Concurrency (default 10)
+  -enc <spec>                   Encoders: KEYWORD:enc1,enc2 (e.g. FUZZ:urlencode)
+  -c, -concurrency <n>          Concurrency (default 40)
   -D, -depth <n>                Max recursion depth (default 0)
-  -r, -redirect                 Follow redirects (default true)
+  -r, -redirect                 Follow redirects (default false)
   -o, -output <base>            Output base name (default output)
-  -of, -outputFormat <fmt>      txt|json|html|csv|ndjson|ffufjson
+  -of, -outputFormat <fmt>      txt|json|html|csv|ndjson|compatjson
 
 HTTP:
   -X, -method <verb>            HTTP method
   -data <body|@file>            HTTP data/body (POST if set); use @path to load body from file
-  -H <h>                        Add header (ffuf)
+  -H <h>                        Add header
   -x, -proxy <url>              Proxy
-  -request <file>               Raw HTTP request file (ffuf)
-  -replay-proxy <url>           Replay proxy (ffuf)
+  -request <file>               Raw HTTP request file
+  -replay-proxy <url>           Replay proxy
   -replay-on-match <bool>       Replay only matches (default true)
-  -request-proto <scheme>       Override request scheme (ffuf)
+  -request-proto <scheme>       Override request scheme
   -proxy-user <user>            Proxy username
   -proxy-pass <pass>            Proxy password
   -verbs <csv>                  HTTP verbs
@@ -58,18 +58,18 @@ WAF:
 FILTERS:
   -fsc, -filterStatusCode <r>   Include status codes (e.g. 200,301-302)
   -fscn, -filterStatusCodeNot   Exclude status codes
-  -mc <r>                       Match status codes (ffuf)
-  -fc <r>                       Filter status codes (ffuf)
+  -mc <r>                       Match status codes
+  -fc <r>                       Filter status codes
   -fl, -filterLength <r>        Include lengths
   -fln, -filterLengthNot <r>    Exclude lengths
-  -ms <r>                       Match size (ffuf)
-  -fs <r>                       Filter size (ffuf)
-  -mw <r>                       Match words (ffuf)
-  -fw <r>                       Filter words (ffuf)
-  -ml <r>                       Match lines (ffuf)
-  -fls <r>                      Filter lines (ffuf)
-  -mt <r>                       Match time in ms (ffuf-like)
-  -ft <r>                       Filter time in ms (ffuf-like)
+  -ms <r>                       Match size
+  -fs <r>                       Filter size
+  -mw <r>                       Match words
+  -fw <r>                       Filter words
+  -ml <r>                       Match lines
+  -fls <r>                      Filter lines
+  -mt <r>                       Match time in ms
+  -ft <r>                       Filter time in ms
   -nd                           Near-duplicate filter
   -nd-len <n>                   Near-duplicate length bucket
   -nd-words <n>                 Near-duplicate word bucket
@@ -83,15 +83,15 @@ FILTERS:
   -fm, -filterMatchWord <word>  Require word in body
   -mr, -filterMatchRegex <re>   Require regex match
   -mrn, -filterMatchRegexNot    Exclude regex match
-  -fr <re>                      Filter regex (ffuf)
+  -fr <re>                      Filter regex
   -mrt, -filterMatchRegexTextOnly  Regex on visible text only
   -f, -filterContentType <ct>   Filter content-type (matches ct or ct; charset=...)
   -fd, -filterDuplicates        Dedupe by body fingerprint
   -dt, -duplicateThreshold <n>  Max duplicates per fingerprint
-  -ic                           Ignore wordlist comments (ffuf)
+  -ic                           Ignore wordlist comments
 
 AUTO-CALIBRATION:
-  -ac                          Auto calibration (ffuf)
+  -ac                          Auto calibration
   -acn <n>                     Auto calibration requests
 
 AUTH:
@@ -122,8 +122,8 @@ LOGIN (session for all requests):
 
 PERF:
   -tr, -throttleRate <n>        Max requests per second
-  -rate <n>                     Max requests per second (ffuf)
-  -p <sec|min-max>              Delay between requests (ffuf)
+  -rate <n>                     Max requests per second
+  -p <sec|min-max>              Delay between requests
   -timeout <sec>                Request timeout in seconds (default 30)
   -retry <n>                    Retry count on 5xx (and 429 when enabled)
   -retry-backoff-ms <ms>        Base backoff in ms

@@ -4,7 +4,24 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
+
+// DefaultMaxResponseSizeCap is the response body size cap (10 MiB) used when MaxResponseSize is 0.
+// When -max-size 0 (default), responses are limited to this size to avoid memory exhaustion from large or streaming bodies.
+const DefaultMaxResponseSizeCap = 10 * 1024 * 1024
+
+// EffectiveMaxResponseSize returns the limit to use for reading response bodies.
+// If MaxResponseSize is 0, returns DefaultMaxResponseSizeCap; otherwise returns MaxResponseSize.
+func EffectiveMaxResponseSize(cfg *Config) int {
+	if cfg == nil {
+		return DefaultMaxResponseSizeCap
+	}
+	if cfg.MaxResponseSize > 0 {
+		return cfg.MaxResponseSize
+	}
+	return DefaultMaxResponseSizeCap
+}
 
 // validateConfig runs after config file and CLI merge. It normalizes fields, applies defaults where needed, and returns an error if the config is invalid.
 func validateConfig(cfg *Config, visited map[string]bool) error {
@@ -37,6 +54,9 @@ func validateConfig(cfg *Config, visited map[string]bool) error {
 	if cfg.Depth < 0 {
 		return errors.New("depth must be >= 0")
 	}
+	if cfg.Timeout <= 0 {
+		cfg.Timeout = 30 * time.Second
+	}
 	if !validOutputFormats[cfg.OutputFormat] {
 		return fmt.Errorf("unsupported output format %q", cfg.OutputFormat)
 	}
@@ -49,6 +69,9 @@ func validateConfig(cfg *Config, visited map[string]bool) error {
 	}
 	if cfg.MinResponseSize < 0 {
 		return fmt.Errorf("min-size must be >= 0")
+	}
+	if cfg.MaxResponseSize > 0 && cfg.MinResponseSize > cfg.MaxResponseSize {
+		return fmt.Errorf("min-size (%d) cannot exceed max-size (%d)", cfg.MinResponseSize, cfg.MaxResponseSize)
 	}
 	if cfg.RandomizeWordlistCase != "" && cfg.RandomizeWordlistCase != "lower" && cfg.RandomizeWordlistCase != "upper" {
 		return fmt.Errorf("wordlist-case must be lower or upper")

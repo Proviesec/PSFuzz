@@ -1,6 +1,6 @@
 # PSFuzz 1.0 – Cheat Sheet
 
-Main command reference: copy-paste examples, ffuf-style usage, and PSFuzz-specific flags.
+Main command reference: copy-paste examples, common fuzzer-style usage, and PSFuzz-specific flags.
 
 ## Typical workflows (copy & paste)
 
@@ -182,7 +182,7 @@ Use a real target (e.g. a WordPress test site or any URL you’re allowed to sca
 ./psfuzz -list targets.txt -w list.txt
 ```
 
-## ffuf‑Style Basics
+## Common fuzzer-style basics
 
 ```bash
 # classic FUZZ
@@ -481,5 +481,5 @@ Config: `loginUrl`, `loginMethod`, `loginUser`, `loginPass`, `loginBody`, `login
 ./psfuzz -u https://target.tld/FUZZ -w list.txt -of html
 ./psfuzz -u https://target.tld/FUZZ -w list.txt -of csv
 ./psfuzz -u https://target.tld/FUZZ -w list.txt -of ndjson
-./psfuzz -u https://target.tld/FUZZ -w list.txt -of ffufjson
+./psfuzz -u https://target.tld/FUZZ -w list.txt -of compatjson
 ```

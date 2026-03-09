@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **ai:** OpenAI-based security verdict; sends status, URL, and truncated body. Requires `OPENAI_API_KEY`. Custom prompt via `-ai-prompt` or config `aiPrompt`; placeholders: `{{status}}`, `{{method}}`, `{{url}}`, `{{body}}`.
   - **urlextract:** Parses URLs from response body and Location header; deduplicates and normalizes; output in `module_data.urlextract.urls`.
 - **Config file:** `modules`, `maxtime`, `maxtimeJob`, `recursionStrategy`, `http2`, `vhost`, and `aiPrompt` can be set in JSON config (`-cf`) and are included in saved config (`-save-config`).
-- **Output – module data:** Module results in all formats: JSON/NDJSON/FFUF-JSON (`module_data` per result), HTML (Modules column), TXT (`modules=...`), CSV (`modules` column).
+- **Output – module data:** Module results in all formats: JSON/NDJSON/compat JSON (`module_data` per result), HTML (Modules column), TXT (`modules=...`), CSV (`modules` column).
 - **CI:** GitHub Actions workflow for build, test, and vet on push/PR (see `.github/workflows/ci.yml`).
 - **ROADMAP.md:** Planned modules for future releases (headers, secrets, links, auth).
 

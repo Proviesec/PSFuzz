@@ -1,6 +1,7 @@
 package output
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -47,9 +48,9 @@ func Write(cfg *config.Config, report *engine.Report) error {
 			return fmt.Errorf("write ndjson: %w", err)
 		}
 		return nil
-	case "ffufjson":
-		if err := writeFFUFJSON(cfg.OutputBase+".json", report, cfg); err != nil {
-			return fmt.Errorf("write ffufjson: %w", err)
+	case "compatjson":
+		if err := writeCompatJSON(cfg.OutputBase+".json", report, cfg); err != nil {
+			return fmt.Errorf("write compat json: %w", err)
 		}
 		return nil
 	default:
@@ -145,11 +146,14 @@ func modulesUsed(m []string) string {
 }
 
 func writeJSON(path string, report *engine.Report) error {
-	b, err := json.MarshalIndent(report, "", "  ")
+	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, b, 0644)
+	defer f.Close()
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	return enc.Encode(report)
 }
 
 func writeNDJSON(path string, report *engine.Report) error {
@@ -173,17 +177,32 @@ func writeCSV(path string, report *engine.Report) error {
 		return err
 	}
 	defer f.Close()
-	fmt.Fprintln(f, "url,status_code,status,content_type,redirect_url,length,words,time_ms,depth,timestamp,truncated,confidence,interesting,modules")
+	w := csv.NewWriter(f)
+	_ = w.Write([]string{"url", "status_code", "status", "content_type", "redirect_url", "length", "words", "time_ms", "depth", "timestamp", "truncated", "confidence", "interesting", "modules"})
 	for _, r := range report.Results {
-		modSum := formatModuleDataSummary(r.ModuleData)
-		modCSV := `"` + strings.ReplaceAll(modSum, `"`, `""`) + `"`
-		fmt.Fprintf(f, "%s,%d,%s,%s,%s,%d,%d,%d,%d,%s,%t,%.2f,%s,%s\n", r.URL, r.StatusCode, r.Status, r.ContentType, r.RedirectURL, r.Length, r.Words, r.TimeMS, r.Depth, r.Timestamp.Format(time.RFC3339), r.Truncated, r.Confidence, strings.Join(r.Interesting, "|"), modCSV)
+		_ = w.Write([]string{
+			r.URL,
+			fmt.Sprintf("%d", r.StatusCode),
+			r.Status,
+			r.ContentType,
+			r.RedirectURL,
+			fmt.Sprintf("%d", r.Length),
+			fmt.Sprintf("%d", r.Words),
+			fmt.Sprintf("%d", r.TimeMS),
+			fmt.Sprintf("%d", r.Depth),
+			r.Timestamp.Format(time.RFC3339),
+			fmt.Sprintf("%t", r.Truncated),
+			fmt.Sprintf("%.2f", r.Confidence),
+			strings.Join(r.Interesting, "|"),
+			formatModuleDataSummary(r.ModuleData),
+		})
 	}
-	return nil
+	w.Flush()
+	return w.Error()
 }
 
-func writeFFUFJSON(path string, report *engine.Report, cfg *config.Config) error {
-	type ffufSummary struct {
+func writeCompatJSON(path string, report *engine.Report, cfg *config.Config) error {
+	type compatSummary struct {
 		Commandline string `json:"commandline"`
 		Time        string `json:"time"`
 		StartedAt   string `json:"started_at,omitempty"`
@@ -191,7 +210,7 @@ func writeFFUFJSON(path string, report *engine.Report, cfg *config.Config) error
 		Results     int    `json:"results"`
 		Duration    string `json:"duration"`
 	}
-	type ffufConfig struct {
+	type compatConfig struct {
 		Commandline string            `json:"commandline"`
 		Time        string            `json:"time"`
 		URL         string            `json:"url"`
@@ -202,32 +221,32 @@ func writeFFUFJSON(path string, report *engine.Report, cfg *config.Config) error
 		Delay       string            `json:"delay"`
 		Proxy       string            `json:"proxy"`
 	}
-	type ffufResult struct {
-		URL         string                 `json:"url"`
-		Status      int                    `json:"status"`
-		ContentType string                 `json:"content_type,omitempty"`
-		RedirectURL string                 `json:"redirect_url,omitempty"`
-		Length      int                    `json:"length"`
-		Words       int                    `json:"words"`
-		Lines       int                    `json:"lines"`
-		TimeMS      int                    `json:"time_ms,omitempty"`
-		Confidence  float64                `json:"confidence,omitempty"`
-		Interesting []string               `json:"interesting,omitempty"`
-		Input       map[string]string     `json:"input,omitempty"`
-		Position    int                    `json:"position,omitempty"`
+	type compatResult struct {
+		URL         string                    `json:"url"`
+		Status      int                       `json:"status"`
+		ContentType string                    `json:"content_type,omitempty"`
+		RedirectURL string                    `json:"redirect_url,omitempty"`
+		Length      int                       `json:"length"`
+		Words       int                       `json:"words"`
+		Lines       int                       `json:"lines"`
+		TimeMS      int                       `json:"time_ms,omitempty"`
+		Confidence  float64                   `json:"confidence,omitempty"`
+		Interesting []string                  `json:"interesting,omitempty"`
+		Input       map[string]string         `json:"input,omitempty"`
+		Position    int                       `json:"position,omitempty"`
 		ModuleData  map[string]map[string]any `json:"module_data,omitempty"`
 	}
-	type ffufOutput struct {
-		Commandline string       `json:"commandline"`
-		Time        string       `json:"time"`
-		Results     []ffufResult `json:"results"`
-		Config      ffufConfig   `json:"config"`
-		Duration    string       `json:"duration"`
-		Summary     ffufSummary  `json:"summary"`
+	type compatOutput struct {
+		Commandline string         `json:"commandline"`
+		Time        string         `json:"time"`
+		Results     []compatResult `json:"results"`
+		Config      compatConfig   `json:"config"`
+		Duration    string         `json:"duration"`
+		Summary     compatSummary  `json:"summary"`
 	}
-	results := make([]ffufResult, 0, len(report.Results))
+	results := make([]compatResult, 0, len(report.Results))
 	for _, r := range report.Results {
-		results = append(results, ffufResult{
+		results = append(results, compatResult{
 			URL:         r.URL,
 			Status:      r.StatusCode,
 			ContentType: r.ContentType,
@@ -244,11 +263,11 @@ func writeFFUFJSON(path string, report *engine.Report, cfg *config.Config) error
 		})
 	}
 	nowStr := time.Now().Format(time.RFC3339)
-	out := ffufOutput{
+	out := compatOutput{
 		Commandline: report.Commandline,
 		Time:        nowStr,
 		Results:     results,
-		Config: ffufConfig{
+		Config: compatConfig{
 			Commandline: report.Commandline,
 			Time:        nowStr,
 			URL:         report.TargetURL,
@@ -260,7 +279,7 @@ func writeFFUFJSON(path string, report *engine.Report, cfg *config.Config) error
 			Proxy:       cfg.Proxy,
 		},
 		Duration: report.Duration.String(),
-		Summary: ffufSummary{
+		Summary: compatSummary{
 			Commandline: report.Commandline,
 			Time:        nowStr,
 			StartedAt:   formatTimeOrEmpty(report.StartedAt),
@@ -269,11 +288,14 @@ func writeFFUFJSON(path string, report *engine.Report, cfg *config.Config) error
 			Duration:    report.Duration.String(),
 		},
 	}
-	b, err := json.MarshalIndent(out, "", "  ")
+	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, b, 0644)
+	defer f.Close()
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	return enc.Encode(out)
 }
 
 func formatDelay(cfg *config.Config) string {
@@ -314,7 +336,7 @@ func writeHTML(path string, report *engine.Report) error {
 		fmt.Fprintf(&b, "<p><strong>Commandline:</strong> <code>%s</code></p>", htmlEscape(report.Commandline))
 	}
 	b.WriteString("</body></html>")
-	return os.WriteFile(path, []byte(b.String()), 0644)
+	return os.WriteFile(path, []byte(b.String()), 0644) //nolint:gosec
 }
 
 // statusClass returns a CSS class name for the status code (ok, redir, client, server).
@@ -331,9 +353,10 @@ func statusClass(code int) string {
 	}
 }
 
+var htmlReplacer = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&quot;", "'", "&#39;")
+
 func htmlEscape(s string) string {
-	r := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&quot;", "'", "&#39;")
-	return r.Replace(s)
+	return htmlReplacer.Replace(s)
 }
 
 // formatModuleDataSummary returns a short one-line summary of module data for display in tables.
@@ -352,9 +375,9 @@ func formatModuleDataSummary(m map[string]map[string]any) string {
 			switch x := v.(type) {
 			case string:
 				vals = append(vals, k+"="+x)
-		case []string:
-			vals = append(vals, k+"="+strings.Join(x, ","))
-		case []any:
+			case []string:
+				vals = append(vals, k+"="+strings.Join(x, ","))
+			case []any:
 				var ss []string
 				for _, item := range x {
 					if s, ok := item.(string); ok {

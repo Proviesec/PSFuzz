@@ -39,7 +39,7 @@ Example custom prompt:
 ## Where module data appears
 
 - **TXT, CSV, HTML:** Each row shows a **short summary** of module data (e.g. `fingerprint: technologies=nginx,php | cors: potentially_permissive`).
-- **JSON, NDJSON, FFUF-JSON:** Each result includes the **full** `module_data` (object per module with all fields). Ideal for evaluation or filtering by technologies, CORS, or AI verdict.
+- **JSON, NDJSON, compat JSON:** Each result includes the **full** `module_data` (object per module with all fields). Ideal for evaluation or filtering by technologies, CORS, or AI verdict.
 
 **Recommendation:** Use `-of json` (or `ndjson`) when you need full module data; then all module output is available per URL in a structured form.
 
@@ -100,13 +100,13 @@ To add a new response-analysis module:
 
    - **If your module needs to call an LLM (OpenAI, Ollama, Gemini):** use the shared **`internal/llm`** package. It provides `llm.Provider`, `llm.Config`, `llm.Message`, `llm.GetAPIKey(provider)`, and `llm.Call(ctx, cfg, apiKey, messages)`. Add your config (provider, endpoint, model, max tokens) to `modules.Config` and wire flags in `internal/config`. See `internal/modules/ai.go` for a full example. New modules can reuse the same layer without duplicating API logic.
 
-3. **Output format:** Put only JSON-serializable values in `Data` (e.g. `string`, `[]string`, `bool`, `float64`). This data appears in the report per result and in all output formats (TXT summary, JSON/NDJSON/FFUF-JSON in full).
+3. **Output format:** Put only JSON-serializable values in `Data` (e.g. `string`, `[]string`, `bool`, `float64`). This data appears in the report per result and in all output formats (TXT summary, JSON/NDJSON/compat JSON in full).
 
 4. **Best practices:**
    - Keep the module stateless or use only config passed at creation (e.g. `AIAnalyzer{Prompt: cfg.AIPrompt}`).
    - Limit work per response (e.g. cap body size, timeouts for external calls).
    - On error, return the error; the runner skips that module for that result but continues others.
-   - Add a test in `modules_test.go` (e.g. `TestYourAnalyzer_...`).
+   - Add a test in `registry_test.go` or a dedicated `*_test.go` (e.g. `TestYourAnalyzer_...`).
 
 5. **Document:** Add the module to the "Available modules" table above and, if needed, to README and CHEATSHEET.
 
@@ -117,4 +117,4 @@ To add a new response-analysis module:
 - Modules run **after** the filter, once per match.
 - Input: URL, Method, StatusCode, Headers, Body, ContentType, Length, Words, Lines.
 - Output: per module a `map[string]any`; one module failing does not block the others.
-- Data is stored in the engine report per `Result` in `ModuleData` and used by all output formats (TXT/CSV/HTML as summary, JSON/NDJSON/FFUF-JSON in full).
+- Data is stored in the engine report per `Result` in `ModuleData` and used by all output formats (TXT/CSV/HTML as summary, JSON/NDJSON/compat JSON in full).

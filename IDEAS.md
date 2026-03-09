@@ -21,14 +21,11 @@ A living list of **north-star** and **nice-to-have** ideas. Not all will be buil
 | Idea | Why it’s cool |
 |------|----------------|
 | **Stdout output** | `-o -` writes the chosen format to stdout (e.g. `-of json -o - \| jq .results`). Piping into jq/grep without temp files. |
-| **Presets** | `-preset quick` (low concurrency, small list), `-preset thorough` (high concurrency, extensions, modules), `-preset stealth` (jitter, random UA, rate limit). Good defaults for beginners, one flag for experts. |
 | **Live progress** | Optional TUI or periodic line: “Hits: 12 | Queue: 340 | Rate: 45/s | Current: /api/FUZZ”. No need to tail a file. |
 | **ETA** | Estimate “~2 min left” from queue size and current rate (like download managers). |
 | **Why included/excluded** | In JSON/HTML: short reason per result: “included: -mc 200”, “excluded: -fr not found”. Makes filter behavior obvious. |
-| **URL list from stdin** | `-list -` to read target URLs from stdin (e.g. `cat urls.txt \| psfuzz -list - -w wordlist.txt`). Fits Amass/httpx-style pipelines; see [FUZZING_GUIDES.md](FUZZING_GUIDES.md). |
-| **Autocalibration** | Auto baseline from a few probe requests and suggest or apply filters (status/size). Like ffuf `-ac`; reduces manual filter tuning. |
-
----
+| **URL list from stdin** | `-list -` to read target URLs from stdin (e.g. `cat urls.txt \| psfuzz -list - -w wordlist.txt`). Fits Amass/httpx-style pipelines. |
+| **Autocalibration** | Auto baseline from a few probe requests and suggest or apply filters (status/size). Reduces manual filter tuning. |
 
 ---
 
@@ -38,7 +35,7 @@ A living list of **north-star** and **nice-to-have** ideas. Not all will be buil
 |------|----------------|
 | **Parameter wordlist** | From links/forms, collect query and body param names; output a “parameter wordlist” for later fuzzing. Attack surface map. |
 | **Open redirect / SSRF probe** | Optional: inject URL in common params, check response or out-of-band. Could be a small module or a dedicated mode. |
-| **Reflexive / reflection filter** | Only match if the fuzzed value (FUZZ) is reflected in the response body. Useful for XSS/reflection checks; vaf has this. Could be a filter (e.g. `-reflective`) or a small module. |
+| **Reflexive / reflection filter** | Only match if the fuzzed value (FUZZ) is reflected in the response body. Useful for XSS/reflection checks. Could be a filter (e.g. `-reflective`) or a small module. |
 
 ---
 
@@ -72,8 +69,22 @@ A living list of **north-star** and **nice-to-have** ideas. Not all will be buil
 | **Tested against** | Document “PSFuzz tested with OWASP WebGoat, DVWA, bWAPP” (or similar). Builds trust. |
 | **Version in banner** | (Already have banner.) Keep it; optional `-v` / `--version` that only prints version for scripts. |
 | **Mascot / visual** | Small, professional mascot or icon for README and releases. Memorable without being silly. |
-| **Recommended wordlist sources** | Short section in README or CHEATSHEET: SecLists, FuzzDB, fuzz.txt, PayloadsAllTheThings, Assetnote, etc. Aligns with bug-bounty fuzzing guides; see [FUZZING_GUIDES.md](FUZZING_GUIDES.md). |
+| **Recommended wordlist sources** | Short section in README or CHEATSHEET: SecLists, FuzzDB, fuzz.txt, PayloadsAllTheThings, Assetnote, etc. Aligns with bug-bounty fuzzing guides. |
 
 ---
 
 *New ideas welcome as PRs or issues.*
+
+---
+
+## Architecture (future improvements)
+
+Planned structural improvements for maintainability and testability. See [docs/OPTIMIZATION_AREAS.md](docs/OPTIMIZATION_AREAS.md) for full analysis.
+
+| Idea | Why it’s cool |
+|------|----------------|
+| **Config as domain structs** | Split `config.Config` (150+ fields) into domain structs (e.g. `ScanConfig`, `FilterConfig`, `HTTPConfig`, `OutputConfig`) and compose into a top-level Config. Easier to test, validate, and extend. |
+| **Engine.Run() phases** | Break the long `Run()` into clear phases (e.g. `prepareRun` → `runLoop`) and an explicit run-state struct. Simplifies testing and adding features (e.g. different producer strategies). |
+| **Module config validation** | Keep the `Analyzer` interface; allow each module to declare and validate its own config so `Enabled()` and init are consistent and failures are clear at startup. |
+| **internal/scan package** | Optional thin package that owns only “run a scan and return a Report”. Keeps orchestration and output/persistence separate; main or CLI does config load, output write, extracted-URLs file. |
+
