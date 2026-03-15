@@ -87,7 +87,15 @@ func writeTXT(cfg *config.Config, path string, report *engine.Report) error {
 		fmt.Fprintf(f, "Ended: %s\n", report.EndedAt.Format(time.RFC3339))
 	}
 	fmt.Fprintf(f, "Duration: %s\n", report.Duration)
-	fmt.Fprintf(f, "Total Requests: %d\n\n", report.TotalRequests)
+	fmt.Fprintf(f, "Total Requests: %d\n", report.TotalRequests)
+	if report.Interrupted {
+		fmt.Fprintf(f, "Interrupted: yes (context cancelled)")
+		if report.CancelReason != "" {
+			fmt.Fprintf(f, " — reason: %s", report.CancelReason)
+		}
+		fmt.Fprintf(f, "\n")
+	}
+	fmt.Fprintf(f, "\n")
 
 	for _, r := range report.Results {
 		target := displayURL(r.URL, cfg.OnlyDomains)

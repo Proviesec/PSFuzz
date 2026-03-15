@@ -84,6 +84,11 @@ type Report struct {
 	Modules        []string       `json:"modules,omitempty"`
 	ExtractedURLs  []string       `json:"extracted_urls,omitempty"`
 	Commandline    string         `json:"commandline,omitempty"`
+	// Interrupted is true when the run ended due to context cancellation (signal, -maxtime, -sa, -sf, -se).
+	// When true, TotalRequests may be lower than the wordlist size and Results are partial.
+	Interrupted bool `json:"interrupted,omitempty"`
+	// CancelReason is set when Interrupted is true: "maxtime", "stop_on_status", "stop_on_matches", "stop_on_errors", or "signal_or_parent" (external cancel/SIGINT/SIGTERM).
+	CancelReason string `json:"cancel_reason,omitempty"`
 }
 
 // recordFilteredHit increments StatusCount for a status and is used when a response is filtered out (no result added).
@@ -146,9 +151,16 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	defer e.client.Close()
 	runCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	e.cancel = cancel
+	var cancelReason atomic.Pointer[string]
+	cancelWithReason := func(reason string) {
+		r := new(string)
+		*r = reason
+		cancelReason.CompareAndSwap(nil, r)
+		cancel()
+	}
+	e.cancel = func() { cancelWithReason("stop_on_errors") }
 	if e.cfg.MaxTime > 0 {
-		timer := time.AfterFunc(time.Duration(e.cfg.MaxTime)*time.Second, cancel)
+		timer := time.AfterFunc(time.Duration(e.cfg.MaxTime)*time.Second, func() { cancelWithReason("maxtime") })
 		defer timer.Stop()
 	}
 
@@ -311,13 +323,13 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	// Producer in separate goroutine so it never blocks when the task channel buffer (Concurrency*2)
 	// is full. Only the producer closes the channel when it exits (so no "send on closed channel" when
 	// context is cancelled while producer is blocked on send).
-	go e.runProducer(runCtx, baseURLs, wordlists, keywordList, headerHasKeyword, bodyHasKeyword, enqueue, closeTaskCh, &taskWg)
+	go e.runProducer(runCtx, baseURLs, wordlists, keywordList, headerHasKeyword, bodyHasKeyword, enqueue, closeTaskCh)
 
 	for i := 0; i < e.cfg.Concurrency; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			e.runWorker(runCtx, taskCh, report, st, enqueue, keywordList, dirs, &mu, cancel, &processed, &bypassCount, visited, &taskWg)
+			e.runWorker(runCtx, taskCh, report, st, enqueue, keywordList, dirs, &mu, cancelWithReason, &processed, &bypassCount, visited, &taskWg)
 		}()
 	}
 
@@ -332,6 +344,14 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 	report.TotalRequests = totalReq.Load()
 	report.Duration = time.Since(started).Round(time.Millisecond)
 	report.EndedAt = time.Now()
+	report.Interrupted = runCtx.Err() != nil
+	if report.Interrupted {
+		if p := cancelReason.Load(); p != nil {
+			report.CancelReason = *p
+		} else {
+			report.CancelReason = "signal_or_parent"
+		}
+	}
 	for d := range dirs {
 		report.DiscoveredDirs = append(report.DiscoveredDirs, d)
 	}
@@ -341,7 +361,7 @@ func (e *Engine) Run(ctx context.Context) (*Report, error) {
 }
 
 // runProducer fills taskCh with initial and recursion tasks for each base URL. It runs in a goroutine and closes taskCh when done (after all enqueued tasks are finished, via taskWg).
-func (e *Engine) runProducer(ctx context.Context, baseURLs []string, wordlists []config.ResolvedWordlist, keywordList config.ResolvedWordlist, headerHasKeyword bool, bodyHasKeyword bool, enqueue func(Task, bool), closeTaskCh func(), taskWg *sync.WaitGroup) {
+func (e *Engine) runProducer(ctx context.Context, baseURLs []string, wordlists []config.ResolvedWordlist, keywordList config.ResolvedWordlist, headerHasKeyword bool, bodyHasKeyword bool, enqueue func(Task, bool), closeTaskCh func()) {
 	defer closeTaskCh()
 	for _, baseURL := range baseURLs {
 		if ctx.Err() != nil {
@@ -384,7 +404,8 @@ func (e *Engine) runProducer(ctx context.Context, baseURLs []string, wordlists [
 }
 
 // runWorker consumes tasks from taskCh, calls processTask, enqueues recursion/bypass tasks, and updates report and shared state.
-func (e *Engine) runWorker(ctx context.Context, taskCh <-chan Task, report *Report, st *runState, enqueue func(Task, bool), keywordList config.ResolvedWordlist, dirs map[string]struct{}, mu *sync.Mutex, cancel context.CancelFunc, processed *atomic.Int64, bypassCount *atomic.Int64, visited map[string]struct{}, taskWg *sync.WaitGroup) {
+// cancelWithReason is called with "stop_on_status" or "stop_on_matches" when a stop condition is met.
+func (e *Engine) runWorker(ctx context.Context, taskCh <-chan Task, report *Report, st *runState, enqueue func(Task, bool), keywordList config.ResolvedWordlist, dirs map[string]struct{}, mu *sync.Mutex, cancelWithReason func(string), processed *atomic.Int64, bypassCount *atomic.Int64, visited map[string]struct{}, taskWg *sync.WaitGroup) {
 	for task := range taskCh {
 		taskCtx := ctx
 		var taskCancel context.CancelFunc
@@ -412,10 +433,10 @@ func (e *Engine) runWorker(ctx context.Context, taskCh <-chan Task, report *Repo
 			}
 		}
 		if hasResp && len(e.cfg.StopOnStatus) > 0 && config.MatchAnyRange(e.cfg.StopOnStatus, statusCode) {
-			cancel()
+			cancelWithReason("stop_on_status")
 		}
 		if e.cfg.StopOnMatches > 0 && int(st.totalHits.Load()) >= e.cfg.StopOnMatches {
-			cancel()
+			cancelWithReason("stop_on_matches")
 		}
 		if hasResp && task.Depth < e.cfg.Depth {
 			if base, recurse := shouldRecurse(task.URL, task.Depth, statusCode, e.cfg); recurse {
@@ -584,7 +605,7 @@ func (e *Engine) processTask(ctx context.Context, task Task, report *Report, st 
 	title := extractTitle(text, lowerText)
 	interesting := findInteresting(lowerText, e.cfg.InterestingStrings)
 
-	if filtered, code := e.applyFilters(task, report, st, resp.StatusCode, status, title, text, contentType, respBody, words, lines, elapsedMS, truncated, suspect, interesting); filtered {
+	if filtered, code := e.applyFilters(report, st, resp.StatusCode, status, title, text, contentType, respBody, words, lines, elapsedMS, truncated, suspect, interesting); filtered {
 		return code, true, nil
 	}
 
@@ -709,14 +730,14 @@ func (e *Engine) trackWAFSuspicion(host string, resp *http.Response, lowerText s
 	return true
 }
 
-// applyFilters runs all configured response filters (interesting strings, test length, wrong status/subdomain, 404 title, and the user filter).
+// applyFilters runs all configured response filters (interesting strings, test length, wrong status/subdomain, 404 title, WAF-suspect 403/429, and the user filter).
 // Returns true if the response should be filtered out (not reported).
-func (e *Engine) applyFilters(task Task, report *Report, st *runState, statusCode int, status, title, text, contentType string, respBody []byte, words, lines, elapsedMS int, truncated, suspect bool, interesting []string) (filtered bool, code int) {
+func (e *Engine) applyFilters(report *Report, st *runState, statusCode int, status, title, text, contentType string, respBody []byte, words, lines, elapsedMS int, truncated, suspect bool, interesting []string) (filtered bool, code int) {
 	if len(e.cfg.InterestingStrings) > 0 && len(interesting) == 0 {
 		recordFilteredHit(report, st.mu, status)
 		return true, statusCode
 	}
-	if e.cfg.FilterTestLength && e.testLen > 0 && len(respBody) == e.testLen {
+	if e.cfg.FilterTestLength && e.testLen > 0 && !truncated && len(respBody) == e.testLen {
 		recordFilteredHit(report, st.mu, status)
 		return true, statusCode
 	}
@@ -728,7 +749,7 @@ func (e *Engine) applyFilters(task Task, report *Report, st *runState, statusCod
 		recordFilteredHit(report, st.mu, status)
 		return true, statusCode
 	}
-	if e.cfg.FilterPossible404 && strings.Contains(title, "404") {
+	if e.cfg.FilterPossible404 && (strings.Contains(title, "404") || (suspect && (statusCode == http.StatusForbidden || statusCode == http.StatusTooManyRequests))) {
 		recordFilteredHit(report, st.mu, status)
 		return true, statusCode
 	}

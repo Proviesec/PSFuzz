@@ -32,7 +32,8 @@ func validateConfig(cfg *Config, visited map[string]bool) error {
 	if cfg.ShowStatus {
 		cfg.FilterStatus = nil
 	}
-	if cfg.FilterStatus == nil && !cfg.ShowStatus {
+	// Apply default match status when none was set (ensures 302 etc. are included).
+	if (cfg.FilterStatus == nil || len(cfg.FilterStatus) == 0) && !cfg.ShowStatus {
 		cfg.FilterStatus = defaultMatcher()
 	}
 

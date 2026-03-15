@@ -56,6 +56,13 @@ paramtest_out/
 comparison/
 bench_out/
 bench_out_1k/
+simple_compare_out*/
+comparison_out/
+check24_test_out/
+
+# Test-only wordlists (not for commit)
+wordlists/compare-*.txt
+wordlists/simple-10000.txt
 
 # Coverage files
 coverage.out
@@ -127,6 +134,7 @@ $RECYCLE.BIN/
 *.orig
 
 # Local docs (keep locally, do not commit/push)
+docs/
 TOOL_COMPARISON.md
 TRYHACKME_ROOM.md
 MEDIUM_ARTICLE.md

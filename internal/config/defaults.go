@@ -116,11 +116,13 @@ func defaultConfig() *Config {
 	}
 }
 
-// defaultMatcher returns the default status code filter (match set): 200-299, 301, 302, 307, 401, 403, 405, 500.
+// defaultMatcher returns the default status codes to match (report as results).
+// 200-299, 301, 302, 307, 401, 403, 405, 500 (common “interesting” codes).
 func defaultMatcher() []StatusRange {
 	return []StatusRange{
-		{Min: 200, Max: 299}, // 2xx
-		{Min: 301, Max: 302},
+		{Min: 200, Max: 299}, // 2xx (200-299)
+		{Min: 301, Max: 301},
+		{Min: 302, Max: 302},
 		{Min: 307, Max: 307},
 		{Min: 401, Max: 401},
 		{Min: 403, Max: 403},
