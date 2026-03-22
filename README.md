@@ -2,6 +2,9 @@
 
 Fast web fuzzer in Go for directory and endpoint discovery. Single binary, common fuzzer-style CLI (`FUZZ`, `-w`, `-mc`, `-x`), with built-in response modules, recursion strategies, and optional AI-driven wordlist selection.
 
+## Disclaimer: DONT BE A JERK!
+Needless to mention, please use this tool very very carefully. The authors won't be responsible for any consequences. 
+
 **Requirements:** Go 1.21+
 
 ## Install
