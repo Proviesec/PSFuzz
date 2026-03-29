@@ -96,4 +96,4 @@ internal/modules     # Response analyzers
 
 ## License
 
-Use only on systems you are authorized to test.
+[MIT License](LICENSE) (Copyright Proviesec)
